@@ -1,0 +1,83 @@
+/**
+ * esq.handsontable styles
+ */
+
+/* Context menu z-index fix */
+.htContextMenu.handsontable {
+  z-index: 2100 !important;
+}
+
+/* Main container styles */
+.esq-handsontable-container {
+  position: relative;
+  height: 55vh;
+  overflow-x: auto;
+}
+
+/* Horizontal scrollbar styling */
+.esq-handsontable-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.esq-handsontable-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.esq-handsontable-container::-webkit-scrollbar-thumb {
+  background: #2bc1ca;
+  border-radius: 5px;
+}
+
+.esq-handsontable-container::-webkit-scrollbar-thumb:hover {
+  background: #25a8b0;
+}
+
+/* Firefox scrollbar */
+.esq-handsontable-container {
+  scrollbar-width: thin;
+  scrollbar-color: #2bc1ca #f0f0f0;
+}
+
+/* Highlight duplicate rows */
+.ht_master .duplicate-row {
+  background-color: #efd7d7 !important;
+}
+
+/* Invalid cell styling */
+.esq-invalid-cell {
+  background-color: #ffbeba !important;
+}
+
+/* Read-only cell styling */
+.esq-readonly-cell {
+  background-color: #eeeeee !important;
+}
+
+/* Action buttons styling */
+.esq-action-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.esq-action-btn:hover {
+  opacity: 0.7;
+}
+
+/* Sortable list styling (for multi-select modal) */
+.list {
+  user-select: none;
+}
+
+.dragged {
+  opacity: 0.8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.item {
+  transition: transform 0.2s ease;
+}

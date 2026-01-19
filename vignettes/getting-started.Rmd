@@ -1,0 +1,100 @@
+---
+title: "Getting Started with esq.handsontable"
+author: "esqLABS"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with esq.handsontable}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Introduction
+
+`esq.handsontable` is a powerful R Shiny package that provides an interactive, Excel-like data table component. Built on [Handsontable](https://handsontable.com/) and React, it offers features like dropdowns, multi-select, validation, conditional cell disabling, and more.
+
+## Installation
+
+```{r install}
+# Install from GitHub
+devtools::install_github("esqlabs/esq.handsontable")
+```
+
+## Quick Start
+
+Here's a minimal example:
+
+```{r quick-start}
+library(shiny)
+library(esq.handsontable)
+
+ui <- fluidPage(
+  esq_tableInput("my_table",
+    data = data.frame(
+      name = c("Alice", "Bob", "Charlie"),
+      age = c(25, 30, 35),
+      active = c(TRUE, FALSE, TRUE)
+    ),
+    columns = list(
+      list(name = "name", type = "text"),
+      list(name = "age", type = "numeric"),
+      list(name = "active", type = "checkbox")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$my_table_edited, {
+    data <- jsonlite::fromJSON(input$my_table_edited)
+    print(data)
+  })
+}
+
+shinyApp(ui, server)
+```
+
+## Core Concepts
+
+### The `esq_tableInput()` Function
+
+| Argument | Description |
+|----------|-------------|
+| `inputId` | Unique identifier for the table |
+| `data` | A data frame with initial data |
+| `columns` | List of column configurations |
+| `cell_conditions` | Optional conditional cell rules |
+| `column_descriptions` | Optional tooltips for columns |
+
+### Column Types
+
+| Type | Description |
+|------|-------------|
+| `text` | Standard text input |
+| `numeric` | Number input with validation |
+| `checkbox` | Boolean checkbox |
+| `dropdown` | Single-select dropdown |
+| `multiselect` | Multi-select dropdown |
+
+### Retrieving Data
+
+```{r retrieve}
+observeEvent(input$my_table_edited, {
+  data <- jsonlite::fromJSON(input$my_table_edited)
+  # Use the data...
+})
+```
+
+## Next Steps
+
+- See `vignette("column-types")` for detailed column configuration
+- See `vignette("conditional-cells")` for dynamic cell behavior
+- See `vignette("dynamic-updates")` for updating options at runtime
+- Check the `examples/` folder for complete working apps

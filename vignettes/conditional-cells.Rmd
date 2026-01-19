@@ -1,0 +1,190 @@
+---
+title: "Conditional Cell Properties"
+author: "esqLABS"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Conditional Cell Properties}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Introduction
+
+The `cell_conditions` parameter allows you to dynamically change cell properties based on other cell values. This enables context-aware forms where fields become relevant or irrelevant based on user selections.
+
+## Basic Syntax
+
+```{r syntax}
+cell_conditions = list(
+  list(
+    column = "target_column",       # Column to modify
+    when_column = "trigger_column", # Column to watch
+    when_value = "trigger_value",   # Value that triggers condition
+    readOnly = TRUE                 # Property to set
+  )
+)
+```
+
+## Simple Example
+
+Disable fields based on a data type selection:
+
+```{r simple}
+esq_tableInput("analysis",
+  data = data.frame(
+    name = c("Analysis 1", "Analysis 2"),
+    dataType = c("Simulated", "Observed"),
+    scenario = c("Baseline", ""),
+    dataset = c("", "Clinical Data")
+  ),
+  columns = list(
+    list(name = "name", type = "text"),
+    list(name = "dataType", type = "dropdown",
+         source = c("Simulated", "Observed")),
+    list(name = "scenario", type = "dropdown",
+         source = c("Baseline", "Treatment A", "Treatment B")),
+    list(name = "dataset", type = "dropdown",
+         source = c("Clinical Data", "Lab Data"))
+  ),
+  cell_conditions = list(
+    # Disable scenario when Observed
+    list(
+      column = "scenario",
+      when_column = "dataType",
+      when_value = "Observed",
+      readOnly = TRUE
+    ),
+    # Disable dataset when Simulated
+    list(
+      column = "dataset",
+      when_column = "dataType",
+      when_value = "Simulated",
+      readOnly = TRUE
+    )
+  )
+)
+```
+
+## Multiple Conditions on Same Column
+
+```{r multiple}
+cell_conditions = list(
+  # Disable amount for Free
+  list(
+    column = "amount",
+    when_column = "payment",
+    when_value = "Free",
+    readOnly = TRUE
+  ),
+  # Also disable amount for Trial
+  list(
+    column = "amount",
+    when_column = "payment",
+    when_value = "Trial",
+    readOnly = TRUE
+  )
+)
+```
+
+## Cascading Conditions
+
+Disable multiple columns based on one trigger:
+
+```{r cascade}
+cell_conditions = list(
+  # If shipping is "Pickup", disable these fields:
+  list(
+    column = "address",
+    when_column = "shipping",
+    when_value = "Pickup",
+    readOnly = TRUE
+  ),
+  list(
+    column = "delivery_date",
+    when_column = "shipping",
+    when_value = "Pickup",
+    readOnly = TRUE
+  ),
+  list(
+    column = "shipping_cost",
+    when_column = "shipping",
+    when_value = "Pickup",
+    readOnly = TRUE
+  )
+)
+```
+
+## Real-World Example: Clinical Trial
+
+```{r clinical}
+esq_tableInput("trial_config",
+  data = data.frame(
+    arm = c("Control", "Treatment A"),
+    arm_type = c("Placebo", "Active"),
+    drug = c("", "Drug X"),
+    dose = c(0, 100),
+    frequency = c("", "Daily")
+  ),
+  columns = list(
+    list(name = "arm", type = "text", width = 120),
+    list(name = "arm_type", type = "dropdown",
+         source = c("Placebo", "Active"), width = 100),
+    list(name = "drug", type = "text", width = 120),
+    list(name = "dose", type = "numeric", width = 80),
+    list(name = "frequency", type = "dropdown",
+         source = c("Daily", "Twice Daily", "Weekly"), width = 100)
+  ),
+  cell_conditions = list(
+    # Placebo arms don't need drug info
+    list(column = "drug", when_column = "arm_type",
+         when_value = "Placebo", readOnly = TRUE),
+    list(column = "dose", when_column = "arm_type",
+         when_value = "Placebo", readOnly = TRUE),
+    list(column = "frequency", when_column = "arm_type",
+         when_value = "Placebo", readOnly = TRUE)
+  )
+)
+```
+
+## How It Works
+
+1. When a cell value changes, all conditions are evaluated
+2. If `when_column` contains `when_value`, the target `column` is modified
+3. Currently, only `readOnly = TRUE` is supported
+4. Disabled cells appear grayed out and cannot be edited
+5. Conditions are evaluated per-row (same row only)
+
+## Best Practices
+
+1. **Keep conditions simple** - One value per condition
+2. **Use clear trigger values** - Distinct, unambiguous options
+3. **Consider defaults** - What should the initial state be?
+4. **Document your logic** - Add comments explaining rules
+
+```{r documented}
+cell_conditions = list(
+  # Business rule: Observed data uses datasets, not scenarios
+  list(
+    column = "scenario",
+    when_column = "dataType",
+    when_value = "Observed",
+    readOnly = TRUE
+  )
+)
+```
+
+## Limitations
+
+- Single value matching only (no ranges or patterns)
+- Only `readOnly = TRUE` property supported
+- Same-row evaluation only
+- Conditions evaluated on each change

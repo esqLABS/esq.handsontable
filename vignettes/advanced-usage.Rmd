@@ -1,0 +1,249 @@
+---
+title: "Advanced Usage"
+author: "esqLABS"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Advanced Usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Context Menu
+
+The table includes a built-in right-click context menu:
+
+- Add row above
+- Add row below
+- Remove row
+
+### Tracking Row Changes
+
+```{r context-menu}
+server <- function(input, output, session) {
+  row_count <- reactiveVal(5)  # Initial rows
+
+  observeEvent(input$my_table_edited, {
+    data <- jsonlite::fromJSON(input$my_table_edited)
+    new_count <- nrow(data)
+
+    if (new_count > row_count()) {
+      showNotification("Row added")
+    } else if (new_count < row_count()) {
+      showNotification("Row removed")
+    }
+
+    row_count(new_count)
+  })
+}
+```
+
+## Data Validation
+
+### Custom Validation
+
+```{r validation}
+server <- function(input, output, session) {
+  observeEvent(input$my_table_edited, {
+    data <- jsonlite::fromJSON(input$my_table_edited)
+
+    errors <- validate_data(data)
+
+    if (length(errors) > 0) {
+      showNotification(
+        paste("Errors:", paste(errors, collapse = ", ")),
+        type = "warning"
+      )
+    }
+  })
+
+  validate_data <- function(data) {
+    errors <- character()
+
+    if (any(is.na(data$name) | data$name == "")) {
+      errors <- c(errors, "Name required")
+    }
+
+    if (any(data$quantity < 0, na.rm = TRUE)) {
+      errors <- c(errors, "Quantity must be >= 0")
+    }
+
+    return(errors)
+  }
+}
+```
+
+## Export Data
+
+### CSV Download
+
+```{r csv}
+ui <- fluidPage(
+  esq_tableInput("data_table", ...),
+  downloadButton("download", "Download CSV")
+)
+
+server <- function(input, output, session) {
+  table_data <- reactiveVal(initial_data)
+
+  observeEvent(input$data_table_edited, {
+    table_data(jsonlite::fromJSON(input$data_table_edited))
+  })
+
+  output$download <- downloadHandler(
+    filename = function() {
+      paste0("data_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      write.csv(table_data(), file, row.names = FALSE)
+    }
+  )
+}
+```
+
+### JSON Download
+
+```{r json}
+output$download_json <- downloadHandler(
+  filename = function() {
+    paste0("data_", Sys.Date(), ".json")
+  },
+  content = function(file) {
+    jsonlite::write_json(table_data(), file, pretty = TRUE)
+  }
+)
+```
+
+## Auto-Save Pattern
+
+```{r autosave}
+server <- function(input, output, session) {
+  auto_save <- debounce(reactive(input$my_table_edited), 2000)
+
+  observe({
+    data_json <- auto_save()
+    req(data_json)
+
+    data <- jsonlite::fromJSON(data_json)
+    saveRDS(data, "auto_save.rds")
+
+    showNotification("Auto-saved", duration = 1)
+  })
+}
+```
+
+## Integration with plotly
+
+```{r plotly}
+library(plotly)
+
+ui <- fluidPage(
+  fluidRow(
+    column(6, esq_tableInput("data", ...)),
+    column(6, plotlyOutput("chart"))
+  )
+)
+
+server <- function(input, output, session) {
+  table_data <- reactive({
+    if (!is.null(input$data_edited)) {
+      jsonlite::fromJSON(input$data_edited)
+    } else {
+      initial_data
+    }
+  })
+
+  output$chart <- renderPlotly({
+    plot_ly(table_data(), x = ~category, y = ~value, type = "bar")
+  })
+}
+```
+
+## Custom CSS Styling
+
+```{r css}
+ui <- fluidPage(
+  tags$head(
+    tags$style(HTML("
+      /* Header styling */
+      .esq-handsontable th {
+        background: #f5f5f5;
+        font-weight: 600;
+      }
+
+      /* Read-only cells */
+      .esq-handsontable td.htDimmed {
+        background: #fafafa;
+        color: #999;
+      }
+
+      /* Invalid cells */
+      .esq-handsontable td.htInvalid {
+        background: #ffebee !important;
+      }
+    "))
+  ),
+  esq_tableInput("styled_table", ...)
+)
+```
+
+## Keyboard Shortcuts
+
+Built-in Handsontable shortcuts:
+
+| Shortcut | Action |
+|----------|--------|
+| Arrow keys | Navigate cells |
+| Enter | Edit / Move down |
+| Tab | Move right |
+| Shift+Tab | Move left |
+| Ctrl+C | Copy |
+| Ctrl+V | Paste |
+| Ctrl+Z | Undo |
+| Ctrl+Y | Redo |
+| Delete | Clear cell |
+| Escape | Cancel editing |
+
+## Error Handling
+
+```{r errors}
+observeEvent(input$my_table_edited, {
+  data <- tryCatch({
+    jsonlite::fromJSON(input$my_table_edited)
+  }, error = function(e) {
+    showNotification("Error parsing data", type = "error")
+    return(NULL)
+  })
+
+  if (is.null(data)) return()
+
+  # Process data...
+})
+```
+
+## Troubleshooting
+
+**Table not rendering?**
+- Check package installation
+- Verify data frame structure
+
+**Dropdowns empty?**
+- Ensure `source` is a character vector
+- Check for typos in column names
+
+**Updates not working?**
+- Verify `inputId` matches
+- Check session is passed correctly
+
+**Performance issues?**
+- Reduce row count (use pagination)
+- Use simpler column types
+- Minimize columns

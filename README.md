@@ -1,0 +1,157 @@
+# esq.handsontable
+
+A powerful, reusable Handsontable wrapper for R Shiny applications. This package provides interactive data tables with dropdowns, multi-select, validation, conditional cell disabling, and more.
+
+## Features
+
+- **Text columns** - Standard text input
+- **Numeric columns** - Number input with validation
+- **Checkbox columns** - Boolean checkbox cells
+- **Dropdown columns** - Single-select dropdown with validation
+- **Multi-select columns** - Multi-select dropdown with optional sorting
+- **Conditional cell disabling** - Disable cells based on other cell values
+- **Validation** - Visual feedback when dropdown values are invalid
+- **Context menu** - Right-click to add/remove rows
+- **Action buttons** - Add/delete buttons in each row
+- **Column tooltips** - Helpful descriptions on column headers
+
+## Installation
+
+```r
+# Install from GitHub using pak (recommended)
+pak::pak("esqLABS/esq.handsontable")
+
+# Or using remotes
+remotes::install_github("esqLABS/esq.handsontable")
+```
+
+## Quick Start
+
+```r
+library(shiny)
+library(esq.handsontable)
+
+ui <- fluidPage(
+  esq_tableInput("myTable",
+    data = data.frame(
+      name = c("Item 1", "Item 2"),
+      category = c("A", "B"),
+      active = c(TRUE, FALSE)
+    ),
+    columns = list(
+      list(name = "name", type = "text"),
+      list(name = "category", type = "dropdown", source = c("A", "B", "C")),
+      list(name = "active", type = "checkbox")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$myTable_edited, {
+    data <- jsonlite::fromJSON(input$myTable_edited)
+    print(data)
+  })
+}
+
+shinyApp(ui, server)
+```
+
+## Column Configuration
+
+Each column is configured as a list with the following options:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | string | Column name (required) |
+| `type` | string | Column type: "text", "numeric", "checkbox", "dropdown", "multiselect" |
+| `source` | vector | Options for dropdown/multiselect columns |
+| `sortable` | boolean | Enable drag-and-drop sorting for multiselect (default: FALSE) |
+| `validate` | boolean | Validate dropdown values (default: TRUE) |
+| `readOnly` | boolean | Make column read-only (default: FALSE) |
+| `width` | number | Column width in pixels |
+
+### Example: Multi-select with Sorting
+
+```r
+list(
+  name = "tags",
+  type = "multiselect",
+  source = c("Tag1", "Tag2", "Tag3"),
+  sortable = TRUE
+)
+```
+
+## Conditional Cell Properties
+
+Use `cell_conditions` to dynamically change cell properties based on other cells:
+
+```r
+esq_tableInput("myTable",
+  data = myData,
+  columns = list(
+    list(name = "dataType", type = "dropdown", source = c("Simulated", "Observed")),
+    list(name = "scenario", type = "dropdown", source = scenarios),
+    list(name = "dataSet", type = "dropdown", source = datasets)
+  ),
+  cell_conditions = list(
+    # Disable scenario when dataType is "Observed"
+    list(
+      column = "scenario",
+      when_column = "dataType",
+      when_value = "Observed",
+      readOnly = TRUE
+    ),
+    # Disable dataSet when dataType is "Simulated"
+    list(
+      column = "dataSet",
+      when_column = "dataType",
+      when_value = "Simulated",
+      readOnly = TRUE
+    )
+  )
+)
+```
+
+## Column Descriptions (Tooltips)
+
+Add helpful tooltips to column headers:
+
+```r
+esq_tableInput("myTable",
+  data = myData,
+  columns = columns,
+  column_descriptions = list(
+    name = "The item's display name",
+    category = "Category for grouping items",
+    active = "Whether the item is currently active"
+  )
+)
+```
+
+## Updating Options Dynamically
+
+Use `updateEsqTable` to update dropdown options at runtime:
+
+```r
+server <- function(input, output, session) {
+  observeEvent(input$refreshCategories, {
+    updateEsqTable(session, "myTable",
+      options = list(
+        categories = c("New A", "New B", "New C")
+      )
+    )
+  })
+}
+```
+
+## License
+
+MIT License
+
+## Credits
+
+Built with:
+- [Handsontable](https://handsontable.com/) - Excel-like data grid
+- [React](https://reactjs.org/) - UI library
+- [Material-UI](https://mui.com/) - UI components
+- [reactR](https://react-r.github.io/reactR/) - React bindings for R

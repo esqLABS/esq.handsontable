@@ -1,0 +1,29 @@
+Package: esq.handsontable
+Title: Interactive Data Tables with Handsontable for Shiny
+Version: 1.0.0
+Authors@R: c(
+    person("Anastasia", "Kostiv", email = "anastasiia.kostiv.ext@esqlabs.com", role = c("aut", "cre"))
+    )
+Description: A powerful, reusable Handsontable wrapper for R Shiny applications.
+    Provides interactive data tables with dropdowns, multi-select with sorting,
+    validation, conditional cell disabling, context menu, and more. Built on
+    'Handsontable' <https://handsontable.com/> and 'React' for a smooth,
+    Excel-like editing experience.
+License: MIT + file LICENSE
+URL: https://github.com/esqlabs/esq.handsontable
+BugReports: https://github.com/esqlabs/esq.handsontable/issues
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+VignetteBuilder: knitr
+Imports:
+    htmltools,
+    jsonlite,
+    reactR,
+    shiny
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

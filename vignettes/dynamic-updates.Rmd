@@ -1,0 +1,205 @@
+---
+title: "Dynamic Updates"
+author: "esqLABS"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dynamic Updates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Introduction
+
+The `updateEsqTable()` function allows you to update dropdown options at runtime without recreating the table.
+
+## Syntax
+
+```{r syntax}
+updateEsqTable(
+  session,           # Shiny session object
+  inputId,           # Table input ID
+  options = list()   # Named list of column options
+)
+```
+
+## Basic Example
+
+```{r basic}
+library(shiny)
+library(esq.handsontable)
+
+ui <- fluidPage(
+  selectInput("region", "Region:",
+    choices = c("North America", "Europe", "Asia")),
+  actionButton("update", "Update Countries"),
+
+  esq_tableInput("sales",
+    data = data.frame(
+      product = c("Widget", "Gadget"),
+      country = c("USA", "Canada")
+    ),
+    columns = list(
+      list(name = "product", type = "text"),
+      list(name = "country", type = "dropdown",
+           source = c("USA", "Canada", "Mexico"))
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$update, {
+    countries <- switch(input$region,
+      "North America" = c("USA", "Canada", "Mexico"),
+      "Europe" = c("UK", "Germany", "France", "Spain"),
+      "Asia" = c("Japan", "China", "South Korea", "India")
+    )
+
+    updateEsqTable(session, "sales",
+      options = list(country = countries)
+    )
+  })
+}
+
+shinyApp(ui, server)
+```
+
+## Update Multiple Columns
+
+```{r multiple}
+updateEsqTable(session, "my_table",
+  options = list(
+    country = c("USA", "Canada"),
+    state = c("California", "Texas"),
+    city = c("Los Angeles", "Houston")
+  )
+)
+```
+
+## Reactive Updates
+
+```{r reactive}
+server <- function(input, output, session) {
+  available_options <- reactive({
+    # Could be a database query
+    switch(input$category,
+      "Electronics" = c("Phones", "Laptops", "Tablets"),
+      "Clothing" = c("Shirts", "Pants", "Shoes"),
+      c("Other")
+    )
+  })
+
+  observe({
+    updateEsqTable(session, "product_table",
+      options = list(subcategory = available_options())
+    )
+  })
+}
+```
+
+## Cascading Dropdowns
+
+```{r cascading}
+location_data <- list(
+  "USA" = c("California", "Texas", "New York"),
+  "Canada" = c("Ontario", "Quebec", "BC")
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$country, {
+    states <- location_data[[input$country]]
+
+    updateEsqTable(session, "location_table",
+      options = list(state = states)
+    )
+  })
+}
+```
+
+## Database-Driven Updates
+
+```{r database}
+server <- function(input, output, session) {
+  observeEvent(input$refresh, {
+    # Query from database
+    # categories <- dbGetQuery(con,
+    #   "SELECT DISTINCT category FROM products")
+
+    categories <- c("New Category 1", "New Category 2")
+
+    updateEsqTable(session, "product_table",
+      options = list(category = categories)
+    )
+
+    showNotification("Options updated!", type = "message")
+  })
+}
+```
+
+## Shiny Modules
+
+When using modules, the session is automatically namespaced:
+
+```{r modules}
+tableModuleServer <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    observeEvent(input$refresh, {
+      # Use inputId without namespace prefix
+      updateEsqTable(session, "data_table",
+        options = list(category = new_categories)
+      )
+    })
+  })
+}
+```
+
+## Performance Tips
+
+### Batch Updates
+
+```{r batch}
+# Good: Single call
+updateEsqTable(session, "table",
+  options = list(
+    col1 = opts1,
+    col2 = opts2,
+    col3 = opts3
+  )
+)
+
+# Avoid: Multiple calls
+# updateEsqTable(session, "table", options = list(col1 = opts1))
+# updateEsqTable(session, "table", options = list(col2 = opts2))
+```
+
+### Debouncing
+
+```{r debounce}
+server <- function(input, output, session) {
+  search_debounced <- debounce(reactive(input$search), 300)
+
+  observe({
+    term <- search_debounced()
+    options <- fetch_options(term)
+    updateEsqTable(session, "table",
+      options = list(items = options)
+    )
+  })
+}
+```
+
+## Best Practices
+
+1. **Update only when needed** - Don't update on every keystroke
+2. **Batch updates** - Combine multiple columns in one call
+3. **Provide feedback** - Show notifications for slow updates
+4. **Handle invalid values** - Warn users about orphaned values
+5. **Test edge cases** - Empty options, special characters
