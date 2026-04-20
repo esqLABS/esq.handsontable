@@ -1,5 +1,10 @@
 # Create an esq.handsontable widget
 
+Creates an interactive, Excel-like data table using Handsontable.
+Supports text, numeric, checkbox, dropdown, multi-select, and date
+columns with features like validation, conditional cell disabling,
+calendar pickers, and more.
+
 ## Usage
 
 ``` r
@@ -64,76 +69,109 @@ esq_tableInput(
 
 - height:
 
-  Table height (default: "100\\
+  Table height as a CSS value (default fills the container).
 
-  widthTable width (default: "100\cell_conditionsA list of conditional
-  cell configurations (see Details). A Shiny UI element containing the
-  Handsontable widget. Creates an interactive, Excel-like data table
-  using Handsontable. Supports text, numeric, checkbox, dropdown,
-  multi-select, and date columns with features like validation,
-  conditional cell disabling, calendar pickers, and more.
+- width:
 
-  ### Column Configuration
+  Table width as a CSS value (default fills the container).
 
-  Each column should be a list with the following elements:
+- cell_conditions:
 
-  - `name` - Column name (required)
+  A list of conditional cell configurations (see Details).
 
-  - `type` - Column type: "text", "numeric", "checkbox", "dropdown",
-    "multiselect", or "date" (required)
+## Value
 
-  - `source` - Options for dropdown/multiselect columns
+A Shiny UI element containing the Handsontable widget.
 
-  - `sortable` - Enable drag-and-drop sorting for multiselect (default:
-    FALSE)
+## Details
 
-  - `validate` - Validate dropdown values (default: TRUE)
+### Column Configuration
 
-  - `readOnly` - Make column read-only (default: FALSE)
+Each column should be a list with the following elements:
 
-  - `width` - Column width in pixels
+- `name` - Column name (required)
 
-  - `dateFormat` - Moment.js format string for date columns (default:
-    "YYYY-MM-DD")
+- `type` - Column type: "text", "numeric", "checkbox", "dropdown",
+  "multiselect", or "date" (required)
 
-  - `correctFormat` - Auto-correct user-typed dates to the declared
-    format (default: TRUE)
+- `source` - Options for dropdown/multiselect columns
 
-  - `defaultDate` - Date shown when the cell is empty and the calendar
-    picker opens
+- `sortable` - Enable drag-and-drop sorting for multiselect (default:
+  FALSE)
 
-  ### Context Menu
+- `validate` - Validate dropdown values (default: TRUE)
 
-  The built-in right-click menu includes: insert row above/below, remove
-  row, undo/redo, copy, clear selection, and clear column. Set
-  `context_menu = FALSE` to disable it, or pass a character vector of
-  item names to show only a subset - for example
-  `context_menu = c("row_above", "row_below", "---", "remove_row")`.
+- `readOnly` - Make column read-only (default: FALSE)
 
-  ### Cell Conditions
+- `width` - Column width in pixels
 
-  Cell conditions allow dynamic cell properties based on other cell
-  values. Each condition should be a list with:
+- `dateFormat` - Moment.js format string for date columns (default:
+  "YYYY-MM-DD")
 
-  - `column` - The column to apply the condition to
+- `correctFormat` - Auto-correct user-typed dates to the declared format
+  (default: TRUE)
 
-  - `when_column` - The column to check
+- `defaultDate` - Date shown when the cell is empty and the calendar
+  picker opens
 
-  - `when_value` - The value that triggers the condition
+### Context Menu
 
-  - `readOnly` - Set cell to read-only when condition is met
+The built-in right-click menu includes: insert row above/below, remove
+row, undo/redo, copy, clear selection, and clear column. Set
+`context_menu = FALSE` to disable it, or pass a character vector of item
+names to show only a subset - for example
+`context_menu = c("row_above", "row_below", "---", "remove_row")`.
 
-  - `type` - Change cell type when condition is met
+### Cell Conditions
 
-  - `source` - Change dropdown options when condition is met
+Cell conditions allow dynamic cell properties based on other cell
+values. Each condition should be a list with:
 
-  if (interactive()) library(shiny)ui \<- fluidPage(
-  esq_tableInput("myTable", data = data.frame( name = c("Item 1", "Item
-  2"), category = c("A", "B"), active = c(TRUE, FALSE), stringsAsFactors
-  = FALSE ), columns = list( list(name = "name", type = "text"),
-  list(name = "category", type = "dropdown", source = c("A", "B", "C")),
-  list(name = "active", type = "checkbox") ) ) )server \<-
-  function(input, output, session) observeEvent(input\$myTable_edited,
-  data \<- jsonlite::fromJSON(input\$myTable_edited) print(data)
-  )shinyApp(ui, server)
-  [`updateEsqTable`](https://esqlabs.github.io/esq.handsontable/reference/updateEsqTable.md)
+- `column` - The column to apply the condition to
+
+- `when_column` - The column to check
+
+- `when_value` - The value that triggers the condition
+
+- `readOnly` - Set cell to read-only when condition is met
+
+- `type` - Change cell type when condition is met
+
+- `source` - Change dropdown options when condition is met
+
+## See also
+
+[`updateEsqTable`](https://esqlabs.github.io/esq.handsontable/reference/updateEsqTable.md)
+
+## Examples
+
+``` r
+if (interactive()) {
+library(shiny)
+
+ui <- fluidPage(
+  esq_tableInput("myTable",
+    data = data.frame(
+      name = c("Item 1", "Item 2"),
+      category = c("A", "B"),
+      active = c(TRUE, FALSE),
+      stringsAsFactors = FALSE
+    ),
+    columns = list(
+      list(name = "name", type = "text"),
+      list(name = "category", type = "dropdown", source = c("A", "B", "C")),
+      list(name = "active", type = "checkbox")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$myTable_edited, {
+    data <- jsonlite::fromJSON(input$myTable_edited)
+    print(data)
+  })
+}
+
+shinyApp(ui, server)
+}
+```
