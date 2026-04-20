@@ -6,6 +6,8 @@
 \alias{esq.handsontable-package}
 \title{esq.handsontable: Interactive Data Tables with 'Handsontable' for 'Shiny'}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Provides an interactive, Excel-like data table input for 'Shiny' applications. Wraps 'Handsontable' \url{https://handsontable.com/} and 'React' to offer editable tables with dropdown columns, multi-select with sorting, validation, conditional cell disabling, context menu, and dynamic option updates at runtime.
 }
 \seealso{
