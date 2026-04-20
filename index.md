@@ -159,7 +159,9 @@ MIT License
 
 ## Credits
 
-Built with: - [Handsontable](https://handsontable.com/) - Excel-like
-data grid - [React](https://reactjs.org/) - UI library -
-[Material-UI](https://mui.com/) - UI components -
-[reactR](https://react-r.github.io/reactR/) - React bindings for R
+Built with:
+
+- [Handsontable](https://handsontable.com/) - Excel-like data grid
+- [React](https://reactjs.org/) - UI library
+- [Material-UI](https://mui.com/) - UI components
+- [reactR](https://react-r.github.io/reactR/) - React bindings for R

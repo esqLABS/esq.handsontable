@@ -1,5 +1,7 @@
 # Getting Started with esq.handsontable
 
+![esq.handsontable logo](../reference/figures/logo.png)
+
 ## Introduction
 
 `esq.handsontable` is an R Shiny package that provides an interactive,
