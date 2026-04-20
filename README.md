@@ -1,4 +1,4 @@
-# esq.handsontable
+# esq.handsontable <img src="man/figures/logo.png" align="right" height="139" alt="esq.handsontable logo" />
 
 A powerful, reusable Handsontable wrapper for R Shiny applications. This package provides interactive data tables with dropdowns, multi-select, validation, conditional cell disabling, and more.
 
@@ -155,6 +155,7 @@ MIT License
 ## Credits
 
 Built with:
+
 - [Handsontable](https://handsontable.com/) - Excel-like data grid
 - [React](https://reactjs.org/) - UI library
 - [Material-UI](https://mui.com/) - UI components

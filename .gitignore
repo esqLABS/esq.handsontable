@@ -33,3 +33,5 @@ Thumbs.db
 cran-comments.md
 /doc/
 /Meta/
+/pkgdown
+/docs

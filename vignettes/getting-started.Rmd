@@ -17,6 +17,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+<img src="../man/figures/logo.png" align="right" height="139" alt="esq.handsontable logo" />
+
 ## Introduction
 
 `esq.handsontable` is an R Shiny package that provides an interactive, Excel-like data table component. Built on [Handsontable](https://handsontable.com/) and React, it offers features like dropdowns, multi-select, validation, conditional cell disabling, and more.
