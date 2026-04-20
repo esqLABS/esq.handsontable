@@ -1,0 +1,13 @@
+pandoc: 3.1.11
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  advanced-usage: advanced-usage.html
+  column-types: column-types.html
+  conditional-cells: conditional-cells.html
+  dynamic-updates: dynamic-updates.html
+  getting-started: getting-started.html
+last_built: 2026-04-20T10:45Z
+urls:
+  reference: https://esqlabs.github.io/esq.handsontable/reference
+  article: https://esqlabs.github.io/esq.handsontable/articles

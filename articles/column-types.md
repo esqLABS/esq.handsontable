@@ -1,0 +1,178 @@
+# Column Types and Configuration
+
+## Column Configuration Options
+
+Each column is configured as a list with various options:
+
+| Option     | Type    | Description                      | Default |
+|------------|---------|----------------------------------|---------|
+| `name`     | string  | Column name (required)           | \-      |
+| `type`     | string  | Column type (required)           | \-      |
+| `source`   | vector  | Options for dropdown/multiselect | NULL    |
+| `sortable` | boolean | Enable drag-sort for multiselect | FALSE   |
+| `validate` | boolean | Validate dropdown values         | TRUE    |
+| `readOnly` | boolean | Make column read-only            | FALSE   |
+| `width`    | number  | Column width in pixels           | auto    |
+
+## Text Columns
+
+Standard text input fields:
+
+``` r
+list(name = "description", type = "text", width = 200)
+
+# Read-only text
+list(name = "id", type = "text", readOnly = TRUE, width = 80)
+```
+
+## Numeric Columns
+
+Number input with automatic validation:
+
+``` r
+list(name = "quantity", type = "numeric", width = 100)
+list(name = "price", type = "numeric", width = 80)
+```
+
+## Checkbox Columns
+
+Boolean checkbox cells:
+
+``` r
+list(name = "active", type = "checkbox", width = 70)
+```
+
+Data should contain `TRUE`/`FALSE` values.
+
+## Dropdown Columns
+
+Single-select dropdown menus:
+
+``` r
+list(
+  name = "category",
+  type = "dropdown",
+  source = c("Electronics", "Clothing", "Food", "Other"),
+  width = 120
+)
+
+# Allow empty values
+list(
+  name = "optional",
+  type = "dropdown",
+  source = c("", "Option A", "Option B"),
+  width = 100
+)
+
+# Disable validation
+list(
+  name = "flexible",
+  type = "dropdown",
+  source = c("A", "B", "C"),
+  validate = FALSE
+)
+```
+
+## Multi-Select Columns
+
+Select multiple values from a list:
+
+``` r
+# Basic multi-select
+list(
+  name = "tags",
+  type = "multiselect",
+  source = c("urgent", "review", "approved", "pending"),
+  width = 180
+)
+
+# Sortable multi-select (drag to reorder)
+list(
+  name = "priorities",
+  type = "multiselect",
+  source = c("Critical", "High", "Medium", "Low"),
+  sortable = TRUE,
+  width = 180
+)
+```
+
+Multi-select values are stored as comma-separated strings:
+`"tag1, tag2, tag3"`
+
+## Column Descriptions (Tooltips)
+
+Add helpful tooltips to column headers:
+
+``` r
+esq_tableInput("my_table",
+  data = my_data,
+  columns = my_columns,
+  column_descriptions = list(
+    id = "Unique identifier (auto-generated)",
+    name = "Full name of the item",
+    status = "Current processing status",
+    priority = "Task priority level (drag to reorder)"
+  )
+)
+```
+
+## Complete Example
+
+``` r
+library(shiny)
+library(esq.handsontable)
+
+ui <- fluidPage(
+  esq_tableInput("inventory",
+    data = data.frame(
+      sku = c("SKU-001", "SKU-002"),
+      name = c("Widget", "Gadget"),
+      category = c("Electronics", "Tools"),
+      price = c(29.99, 49.99),
+      tags = c("sale, featured", "new"),
+      in_stock = c(TRUE, FALSE),
+      stringsAsFactors = FALSE
+    ),
+    columns = list(
+      list(name = "sku", type = "text", width = 90, readOnly = TRUE),
+      list(name = "name", type = "text", width = 150),
+      list(name = "category", type = "dropdown",
+           source = c("Electronics", "Tools", "Clothing"), width = 110),
+      list(name = "price", type = "numeric", width = 80),
+      list(name = "tags", type = "multiselect",
+           source = c("sale", "featured", "new", "clearance"),
+           sortable = TRUE, width = 150),
+      list(name = "in_stock", type = "checkbox", width = 70)
+    ),
+    column_descriptions = list(
+      sku = "Stock Keeping Unit (read-only)",
+      name = "Product name",
+      category = "Product category",
+      price = "Price in USD",
+      tags = "Product tags (drag to prioritize)",
+      in_stock = "Currently in stock?"
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  observeEvent(input$inventory_edited, {
+    data <- jsonlite::fromJSON(input$inventory_edited)
+    print(data)
+  })
+}
+
+shinyApp(ui, server)
+```
+
+## Recommended Column Widths
+
+| Column Type  | Recommended Width |
+|--------------|-------------------|
+| ID/Code      | 60-90px           |
+| Short text   | 100-150px         |
+| Long text    | 200-300px         |
+| Numeric      | 70-100px          |
+| Checkbox     | 60-80px           |
+| Dropdown     | 100-150px         |
+| Multi-select | 150-200px         |
