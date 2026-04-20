@@ -26,8 +26,8 @@
 #'   }
 #' @param none_value Deprecated and ignored. Dropdown cells can be cleared with
 #'   the Delete or Backspace key. Kept for backward compatibility.
-#' @param height Table height (default: "100\%").
-#' @param width Table width (default: "100\%").
+#' @param height Table height as a CSS value (default fills the container).
+#' @param width Table width as a CSS value (default fills the container).
 #' @param cell_conditions A list of conditional cell configurations (see Details).
 #'
 #' @details

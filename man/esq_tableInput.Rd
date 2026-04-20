@@ -45,9 +45,9 @@ in the given order. Valid names: \code{"row_above"},
 \item{none_value}{Deprecated and ignored. Dropdown cells can be cleared with
 the Delete or Backspace key. Kept for backward compatibility.}
 
-\item{height}{Table height (default: "100\\%").}
+\item{height}{Table height as a CSS value (default fills the container).}
 
-\item{width}{Table width (default: "100\\%").}
+\item{width}{Table width as a CSS value (default fills the container).}
 
 \item{cell_conditions}{A list of conditional cell configurations (see Details).}
 }
