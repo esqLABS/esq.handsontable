@@ -19,17 +19,22 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The `updateEsqTable()` function allows you to update dropdown options at runtime without recreating the table.
+`updateEsqTable()` lets you change a table's data, dropdown/multiselect
+options, or column configuration at runtime — without recreating the widget.
 
 ## Syntax
 
 ```{r syntax}
 updateEsqTable(
-  session,           # Shiny session object
-  inputId,           # Table input ID
-  options = list()   # Named list of column options
+  session,            # Shiny session object
+  inputId,            # Table input ID
+  data = NULL,        # New data frame (replaces current rows)
+  options = NULL,     # Named list: column name -> new option vector
+  columns = NULL      # Updated column configurations (same format as esq_tableInput)
 )
 ```
+
+All three arguments are optional; pass only what you need to change.
 
 ## Basic Example
 
@@ -70,6 +75,22 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+```
+
+## Replacing Table Data
+
+Pass a new data frame to swap out all rows:
+
+```{r data}
+observeEvent(input$reset, {
+  updateEsqTable(session, "sales", data = original_data)
+})
+
+# Filter and push a subset
+observeEvent(input$region, {
+  filtered <- all_data[all_data$region == input$region, ]
+  updateEsqTable(session, "sales", data = filtered)
+})
 ```
 
 ## Update Multiple Columns
@@ -165,8 +186,11 @@ tableModuleServer <- function(id) {
 
 ### Batch Updates
 
+Option updates merge cumulatively on the client, so either form works.
+A single call avoids redundant round-trips and is preferred.
+
 ```{r batch}
-# Good: Single call
+# Preferred: single call
 updateEsqTable(session, "table",
   options = list(
     col1 = opts1,
@@ -175,9 +199,9 @@ updateEsqTable(session, "table",
   )
 )
 
-# Avoid: Multiple calls
-# updateEsqTable(session, "table", options = list(col1 = opts1))
-# updateEsqTable(session, "table", options = list(col2 = opts2))
+# Also fine: separate calls (previous options are retained)
+updateEsqTable(session, "table", options = list(col1 = opts1))
+updateEsqTable(session, "table", options = list(col2 = opts2))
 ```
 
 ### Debouncing

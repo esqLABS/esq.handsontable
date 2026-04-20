@@ -2,27 +2,32 @@
 % Please edit documentation in R/esq_handsontable.R
 \name{updateEsqTable}
 \alias{updateEsqTable}
-\title{Update esq.handsontable dropdown options}
+\title{Update an esq.handsontable widget}
 \usage{
-updateEsqTable(session, inputId, options = list())
+updateEsqTable(session, inputId, data = NULL, options = NULL, columns = NULL)
 }
 \arguments{
 \item{session}{The Shiny session object.}
 
 \item{inputId}{The input ID of the table to update.}
 
+\item{data}{New data frame (optional).}
+
 \item{options}{A named list where names are column names and values are
-character vectors of new dropdown options.}
+character vectors of new dropdown options (optional).}
+
+\item{columns}{Updated column configurations (optional).}
 }
 \value{
-Called for side effect (sends message to client).
+Called for side effect (sends message to client). Returns
+\code{invisible(NULL)}.
 }
 \description{
-Dynamically updates the dropdown options for one or more columns
-in an existing esq.handsontable widget without recreating the table.
+Dynamically updates the data, dropdown options, or column configurations
+for an existing esq.handsontable widget without recreating the table.
 }
 \examples{
-\dontrun{
+if (interactive()) {
 server <- function(input, output, session) {
   observeEvent(input$update_button, {
     updateEsqTable(session, "my_table",
@@ -34,6 +39,7 @@ server <- function(input, output, session) {
   })
 }
 }
+
 }
 \seealso{
 \code{\link{esq_tableInput}}

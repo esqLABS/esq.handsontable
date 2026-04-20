@@ -4,6 +4,20 @@
 library(shiny)
 library(esq.handsontable)
 
+initial_data <- data.frame(
+  site_id = c("SITE-001", "SITE-002", "SITE-003", "SITE-004", "SITE-005", "SITE-006"),
+  site_name = c("Boston Medical Center", "LA Research Institute", "Chicago Clinical", "NYC Hospital", "Miami Research", "Seattle Medical"),
+  phase = c("Phase II", "Phase III", "Phase II", "Phase I", "Phase III", "Phase II"),
+  status = c("Recruiting", "Active", "Recruiting", "Setup", "Completed", "Paused"),
+  enrolled = c(45, 120, 38, 0, 95, 62),
+  target = c(100, 150, 80, 50, 100, 100),
+  pi_name = c("Dr. Smith", "Dr. Johnson", "Dr. Williams", "Dr. Brown", "Dr. Davis", "Dr. Miller"),
+  specialties = c("Oncology, Cardiology", "Oncology", "Neurology, Psychiatry", "Cardiology", "Oncology, Immunology", "Neurology"),
+  start_date = c("2024-01-15", "2023-06-01", "2024-02-20", "2024-03-01", "2023-01-10", "2024-01-05"),
+  active = c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE),
+  stringsAsFactors = FALSE
+)
+
 ui <- fluidPage(
   tags$head(
     tags$style(HTML("
@@ -48,24 +62,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       width = 3,
-      h4("Controls"),
 
-      selectInput("phase_filter", "Filter by Phase:",
-        choices = c("All Phases", "Phase I", "Phase II", "Phase III", "Phase IV")
-      ),
-
-      hr(),
-
-      h5("Dynamic Updates"),
-      selectInput("specialty_set", "Specialty Options:",
-        choices = c("General", "Oncology Focus", "Cardiology Focus", "Neurology Focus")
-      ),
-      actionButton("apply_specialties", "Apply Specialties", class = "btn-info btn-block"),
-
-      hr(),
-
-      h5("Actions"),
-      actionButton("refresh", "Refresh Data", class = "btn-success btn-block"),
       downloadButton("download_csv", "Download CSV", class = "btn-block"),
 
       hr(),
@@ -108,19 +105,7 @@ ui <- fluidPage(
       ),
 
       esq_tableInput("trial_table",
-        data = data.frame(
-          site_id = c("SITE-001", "SITE-002", "SITE-003", "SITE-004", "SITE-005", "SITE-006"),
-          site_name = c("Boston Medical Center", "LA Research Institute", "Chicago Clinical", "NYC Hospital", "Miami Research", "Seattle Medical"),
-          phase = c("Phase II", "Phase III", "Phase II", "Phase I", "Phase III", "Phase II"),
-          status = c("Recruiting", "Active", "Recruiting", "Setup", "Completed", "Paused"),
-          enrolled = c(45, 120, 38, 0, 95, 62),
-          target = c(100, 150, 80, 50, 100, 100),
-          pi_name = c("Dr. Smith", "Dr. Johnson", "Dr. Williams", "Dr. Brown", "Dr. Davis", "Dr. Miller"),
-          specialties = c("Oncology, Cardiology", "Oncology", "Neurology, Psychiatry", "Cardiology", "Oncology, Immunology", "Neurology"),
-          start_date = c("2024-01-15", "2023-06-01", "2024-02-20", "2024-03-01", "2023-01-10", "2024-01-05"),
-          active = c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE),
-          stringsAsFactors = FALSE
-        ),
+        data = initial_data,
         columns = list(
           list(name = "site_id", type = "text", width = 85, readOnly = TRUE),
           list(name = "site_name", type = "text", width = 160),
@@ -134,7 +119,7 @@ ui <- fluidPage(
           list(name = "specialties", type = "multiselect",
                source = c("Oncology", "Cardiology", "Neurology", "Psychiatry", "Immunology", "Endocrinology", "Rheumatology", "Dermatology", "Pulmonology", "Nephrology"),
                sortable = TRUE, width = 180),
-          list(name = "start_date", type = "text", width = 95),
+          list(name = "start_date", type = "date", dateFormat = "YYYY-MM-DD", width = 110),
           list(name = "active", type = "checkbox", width = 60)
         ),
         cell_conditions = list(
@@ -173,16 +158,8 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  # Data storage
-  table_data <- reactiveVal(NULL)
+  table_data <- reactiveVal(initial_data)
   activity <- reactiveVal(character())
-
-  # Initial data for calculations
-  initial_data <- data.frame(
-    enrolled = c(45, 120, 38, 0, 95, 62),
-    target = c(100, 150, 80, 50, 100, 100),
-    active = c(TRUE, TRUE, TRUE, FALSE, FALSE, FALSE)
-  )
 
   log_activity <- function(msg) {
     activity(c(paste0("[", format(Sys.time(), "%H:%M:%S"), "] ", msg), head(activity(), 7)))
@@ -191,50 +168,41 @@ server <- function(input, output, session) {
   observe({ log_activity("Application initialized") })
 
   observeEvent(input$trial_table_edited, {
-    data <- jsonlite::fromJSON(input$trial_table_edited)
-    table_data(data)
+    edited <- jsonlite::fromJSON(input$trial_table_edited)
+    table_data(edited)
     log_activity("Table data modified")
   })
 
-  # Stats
+  # Stats — safe against empty or missing columns
+  current_data <- reactive({
+    table_data()
+  })
+
   output$total_patients <- renderText({
-    data <- if (!is.null(table_data())) table_data() else initial_data
-    sum(data$enrolled, na.rm = TRUE)
+    data <- current_data()
+    if (is.null(data) || nrow(data) == 0) return("0")
+    sum(as.numeric(data$enrolled), na.rm = TRUE)
   })
 
   output$active_sites <- renderText({
-    data <- if (!is.null(table_data())) table_data() else initial_data
-    sum(data$active, na.rm = TRUE)
+    data <- current_data()
+    if (is.null(data) || nrow(data) == 0) return("0")
+    sum(as.logical(data$active), na.rm = TRUE)
   })
 
   output$avg_enrollment <- renderText({
-    data <- if (!is.null(table_data())) table_data() else initial_data
-    enrolled <- sum(data$enrolled, na.rm = TRUE)
-    target <- sum(data$target, na.rm = TRUE)
+    data <- current_data()
+    if (is.null(data) || nrow(data) == 0) return("0%")
+    enrolled <- sum(as.numeric(data$enrolled), na.rm = TRUE)
+    target <- sum(as.numeric(data$target), na.rm = TRUE)
+    if (target == 0) return("0%")
     paste0(round(enrolled / target * 100, 0), "%")
   })
 
   output$total_sites <- renderText({
-    data <- if (!is.null(table_data())) table_data() else initial_data
+    data <- current_data()
+    if (is.null(data)) return("0")
     nrow(data)
-  })
-
-  # Apply specialties
-  observeEvent(input$apply_specialties, {
-    new_specs <- switch(input$specialty_set,
-      "Oncology Focus" = c("Oncology", "Immunology", "Hematology", "Radiation Oncology", "Surgical Oncology"),
-      "Cardiology Focus" = c("Cardiology", "Cardiac Surgery", "Electrophysiology", "Heart Failure", "Interventional"),
-      "Neurology Focus" = c("Neurology", "Neurosurgery", "Psychiatry", "Sleep Medicine", "Pain Management"),
-      c("Oncology", "Cardiology", "Neurology", "Psychiatry", "Immunology", "Endocrinology", "Rheumatology", "Dermatology", "Pulmonology", "Nephrology")
-    )
-
-    updateEsqTable(session, "trial_table", options = list(specialties = new_specs))
-    log_activity(paste("Specialties updated to:", input$specialty_set))
-  })
-
-  observeEvent(input$refresh, {
-    log_activity("Data refresh requested")
-    showNotification("Data refreshed!", type = "message", duration = 2)
   })
 
   output$activity_log <- renderPrint({
@@ -243,21 +211,24 @@ server <- function(input, output, session) {
   })
 
   output$data_summary <- renderPrint({
-    if (!is.null(table_data())) {
-      data <- table_data()
+    data <- current_data()
+    if (!is.null(data) && nrow(data) > 0) {
       cat("Sites by Status:\n")
       print(table(data$status))
       cat("\nSites by Phase:\n")
       print(table(data$phase))
     } else {
-      cat("Edit the table to see summary...")
+      cat("No data available.")
     }
   })
 
   output$download_csv <- downloadHandler(
     filename = function() paste0("trial_data_", Sys.Date(), ".csv"),
     content = function(file) {
-      data <- if (!is.null(table_data())) table_data() else data.frame()
+      data <- current_data()
+      if (is.null(data) || nrow(data) == 0) {
+        data <- initial_data
+      }
       write.csv(data, file, row.names = FALSE)
       log_activity("CSV downloaded")
     }

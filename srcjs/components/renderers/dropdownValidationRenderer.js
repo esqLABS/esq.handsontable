@@ -26,8 +26,8 @@ export function dropdownValidationRenderer(
   // Get the valid dropdown options
   const validSource = cellProperties.source || [];
 
-  // Skip validation for empty values or placeholder values
-  if (value === null || value === undefined || value === '' || value === '--NONE--') {
+  // Skip validation for empty values
+  if (value === null || value === undefined || value === '') {
     td.style.background = "#ffffff";
     td.title = '';
     return td;

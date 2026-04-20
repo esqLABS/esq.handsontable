@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-`esq.handsontable` is a powerful R Shiny package that provides an interactive, Excel-like data table component. Built on [Handsontable](https://handsontable.com/) and React, it offers features like dropdowns, multi-select, validation, conditional cell disabling, and more.
+`esq.handsontable` is an R Shiny package that provides an interactive, Excel-like data table component. Built on [Handsontable](https://handsontable.com/) and React, it offers features like dropdowns, multi-select, validation, conditional cell disabling, and more.
 
 ## Installation
 
@@ -70,8 +70,14 @@ shinyApp(ui, server)
 | `inputId` | Unique identifier for the table |
 | `data` | A data frame with initial data |
 | `columns` | List of column configurations |
-| `cell_conditions` | Optional conditional cell rules |
+| `options` | Named list of dropdown options for dynamic updates |
 | `column_descriptions` | Optional tooltips for columns |
+| `show_action_buttons` | Show add/delete row buttons (default: TRUE) |
+| `context_menu` | Enable right-click context menu (default: TRUE) |
+| `none_value` | *Deprecated, ignored.* Kept for backward compatibility |
+| `height` | Table height (default: "100%") |
+| `width` | Table width (default: "100%") |
+| `cell_conditions` | Optional conditional cell rules |
 
 ### Column Types
 
@@ -82,6 +88,27 @@ shinyApp(ui, server)
 | `checkbox` | Boolean checkbox |
 | `dropdown` | Single-select dropdown |
 | `multiselect` | Multi-select dropdown |
+| `date` | Calendar picker (Pikaday). Configure with `dateFormat` (default `"YYYY-MM-DD"`), optional `correctFormat`, and `defaultDate` |
+
+### Context Menu
+
+Right-click any cell to access: insert row above/below, remove row, undo/redo, copy, clear selection, and clear column.
+
+`context_menu` accepts:
+
+- `TRUE` (default) — show all items
+- `FALSE` — disable the menu
+- a character vector — show only the listed items, in order. Use `"---"` to insert a separator.
+
+```{r context-menu-custom}
+esq_tableInput("my_table",
+  data = my_data,
+  columns = my_columns,
+  context_menu = c("row_above", "row_below", "---", "remove_row", "undo", "redo")
+)
+```
+
+Valid item names: `row_above`, `row_below`, `remove_row`, `undo`, `redo`, `copy`, `clear`, `clear_column`.
 
 ### Retrieving Data
 

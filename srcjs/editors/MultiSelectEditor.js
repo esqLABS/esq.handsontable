@@ -113,6 +113,8 @@ class MultiSelectEditor extends BaseEditorComponent {
   }
 
   saveChanges(values) {
+    const newValue = values.length > 0 ? values.join(", ") : null;
+
     if (this.props.onSave) {
       this.props.onSave(
         values,
@@ -121,8 +123,21 @@ class MultiSelectEditor extends BaseEditorComponent {
         this.state.cellData.originalValue
       );
     }
-    this.finishEditing();
-    this.close();
+
+    // Update the editor value so getValue() returns the new selection,
+    // close the modal so finishEditing's guard passes, then complete
+    // Handsontable's editor lifecycle in the setState callback (after
+    // state has actually been flushed).
+    this.setState(
+      {
+        value: newValue,
+        modalVisible: false,
+        currentOptions: null,
+      },
+      () => {
+        this._originalFinishEditing(false, false);
+      }
+    );
   }
 
   render() {

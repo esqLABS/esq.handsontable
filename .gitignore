@@ -31,3 +31,5 @@ Thumbs.db
 
 # cran-comments (not for git)
 cran-comments.md
+/doc/
+/Meta/

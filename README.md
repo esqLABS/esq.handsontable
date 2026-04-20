@@ -9,9 +9,10 @@ A powerful, reusable Handsontable wrapper for R Shiny applications. This package
 - **Checkbox columns** - Boolean checkbox cells
 - **Dropdown columns** - Single-select dropdown with validation
 - **Multi-select columns** - Multi-select dropdown with optional sorting
+- **Date columns** - Calendar picker with configurable format
 - **Conditional cell disabling** - Disable cells based on other cell values
 - **Validation** - Visual feedback when dropdown values are invalid
-- **Context menu** - Right-click to add/remove rows
+- **Context menu** - Right-click for insert/remove row, undo/redo, copy, clear (items are customizable per table)
 - **Action buttons** - Add/delete buttons in each row
 - **Column tooltips** - Helpful descriptions on column headers
 
@@ -63,12 +64,15 @@ Each column is configured as a list with the following options:
 | Option | Type | Description |
 |--------|------|-------------|
 | `name` | string | Column name (required) |
-| `type` | string | Column type: "text", "numeric", "checkbox", "dropdown", "multiselect" |
+| `type` | string | Column type: "text", "numeric", "checkbox", "dropdown", "multiselect", "date" |
 | `source` | vector | Options for dropdown/multiselect columns |
 | `sortable` | boolean | Enable drag-and-drop sorting for multiselect (default: FALSE) |
 | `validate` | boolean | Validate dropdown values (default: TRUE) |
 | `readOnly` | boolean | Make column read-only (default: FALSE) |
 | `width` | number | Column width in pixels |
+| `dateFormat` | string | Moment.js format for date columns (default: `"YYYY-MM-DD"`) |
+| `correctFormat` | boolean | Auto-correct typed dates to `dateFormat` (default: TRUE) |
+| `defaultDate` | string | Date shown when the calendar opens on an empty cell |
 
 ### Example: Multi-select with Sorting
 
@@ -137,7 +141,7 @@ server <- function(input, output, session) {
   observeEvent(input$refreshCategories, {
     updateEsqTable(session, "myTable",
       options = list(
-        categories = c("New A", "New B", "New C")
+        category = c("New A", "New B", "New C")
       )
     )
   })

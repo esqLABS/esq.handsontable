@@ -1,11 +1,12 @@
 # esq.handsontable 1.0.0
 
-## Initial CRAN Release
+## Initial Release
 
-### Features
+### Functions
 
 * `esq_tableInput()` - Create interactive data tables in Shiny
-* `updateEsqTable()` - Dynamically update dropdown options at runtime
+* `updateEsqTable()` - Dynamically update data, dropdown options, or column
+  configuration at runtime
 
 ### Column Types
 
@@ -14,11 +15,20 @@
 * **checkbox** - Boolean checkbox cells
 * **dropdown** - Single-select dropdown with validation
 * **multiselect** - Multi-select dropdown with optional drag-and-drop sorting
+* **date** - Calendar picker (Pikaday); configurable via `dateFormat`
+  (default `"YYYY-MM-DD"`), `correctFormat`, and `defaultDate`
 
-### Additional Features
+### Features
 
-* Conditional cell properties - Disable cells based on other cell values
-* Column tooltips - Add helpful descriptions to column headers
-* Context menu - Right-click to add/remove rows
-* Validation - Visual feedback for invalid dropdown values
-* Dynamic updates - Change dropdown options without recreating the table
+* Conditional cell properties - disable or re-type cells based on other cell
+  values
+* Column tooltips - helpful descriptions on column headers
+* Validation - visual feedback when dropdown values fall outside the source
+* Customizable right-click context menu - insert row above/below, remove row,
+  undo/redo, copy, clear selection, clear column. `context_menu` accepts
+  `TRUE`, `FALSE`, or a character vector of item names for fine-grained
+  control (use `"---"` for separators)
+* Action buttons column - add/delete buttons in each row
+* Cumulative option updates - calling `updateEsqTable(options = ...)` merges
+  with previously sent options rather than replacing them, so per-column
+  updates can be issued independently

@@ -2,14 +2,20 @@
 % Please edit documentation in R/esq_handsontable.R
 \name{esq_tableInput}
 \alias{esq_tableInput}
-\title{Create an interactive Handsontable input for Shiny}
+\title{Create an esq.handsontable widget}
 \usage{
 esq_tableInput(
   inputId,
-  data,
-  columns,
-  cell_conditions = NULL,
-  column_descriptions = NULL
+  data = NULL,
+  columns = list(),
+  options = list(),
+  column_descriptions = list(),
+  show_action_buttons = TRUE,
+  context_menu = TRUE,
+  none_value = "--NONE--",
+  height = "100\%",
+  width = "100\%",
+  cell_conditions = list()
 )
 }
 \arguments{
@@ -17,46 +23,100 @@ esq_tableInput(
 
 \item{data}{A data frame containing the initial data to display.}
 
-\item{columns}{A list of column configurations. Each column should be a list with:
+\item{columns}{A list of column configurations (see Details).}
+
+\item{options}{A named list of dropdown options that can be referenced by columns.}
+
+\item{column_descriptions}{A named list of column descriptions for tooltips.}
+
+\item{show_action_buttons}{Whether to show add/delete buttons column (default: TRUE).}
+
+\item{context_menu}{Controls the right-click context menu. Accepts:
 \itemize{
-  \item \code{name} - Column name (required)
-  \item \code{type} - Column type: "text", "numeric", "checkbox", "dropdown", "multiselect" (required)
-  \item \code{source} - Options for dropdown/multiselect columns
-  \item \code{sortable} - Enable drag-and-drop sorting for multiselect (default: FALSE)
-  \item \code{validate} - Validate dropdown values (default: TRUE)
-  \item \code{readOnly} - Make column read-only (default: FALSE)
-  \item \code{width} - Column width in pixels
+\item \code{TRUE} (default) - show all built-in items
+\item \code{FALSE} - disable the menu
+\item a character vector of item names - show only the listed items,
+in the given order. Valid names: \code{"row_above"},
+\code{"row_below"}, \code{"remove_row"}, \code{"undo"},
+\code{"redo"}, \code{"copy"}, \code{"clear"},
+\code{"clear_column"}. Use \code{"---"} to insert a separator.
 }}
 
-\item{cell_conditions}{Optional list of conditions for dynamic cell properties. Each condition should be a list with:
-\itemize{
-  \item \code{column} - Target column name
-  \item \code{when_column} - Column to watch for trigger value
-  \item \code{when_value} - Value that triggers the condition
-  \item \code{readOnly} - Set to TRUE to disable the cell
-}}
+\item{none_value}{Deprecated and ignored. Dropdown cells can be cleared with
+the Delete or Backspace key. Kept for backward compatibility.}
 
-\item{column_descriptions}{Optional named list of column descriptions for tooltips.}
+\item{height}{Table height (default: "100\\%").}
+
+\item{width}{Table width (default: "100\\%").}
+
+\item{cell_conditions}{A list of conditional cell configurations (see Details).}
 }
 \value{
 A Shiny UI element containing the Handsontable widget.
 }
 \description{
 Creates an interactive, Excel-like data table using Handsontable.
-Supports text, numeric, checkbox, dropdown, and multi-select columns
-with features like validation, conditional cell disabling, and more.
+Supports text, numeric, checkbox, dropdown, multi-select, and date
+columns with features like validation, conditional cell disabling,
+calendar pickers, and more.
+}
+\details{
+\subsection{Column Configuration}{
+
+Each column should be a list with the following elements:
+\itemize{
+\item \code{name} - Column name (required)
+\item \code{type} - Column type: "text", "numeric", "checkbox", "dropdown",
+"multiselect", or "date" (required)
+\item \code{source} - Options for dropdown/multiselect columns
+\item \code{sortable} - Enable drag-and-drop sorting for multiselect
+(default: FALSE)
+\item \code{validate} - Validate dropdown values (default: TRUE)
+\item \code{readOnly} - Make column read-only (default: FALSE)
+\item \code{width} - Column width in pixels
+\item \code{dateFormat} - Moment.js format string for date columns
+(default: "YYYY-MM-DD")
+\item \code{correctFormat} - Auto-correct user-typed dates to the
+declared format (default: TRUE)
+\item \code{defaultDate} - Date shown when the cell is empty and
+the calendar picker opens
+}
+}
+
+\subsection{Context Menu}{
+
+The built-in right-click menu includes: insert row above/below,
+remove row, undo/redo, copy, clear selection, and clear column.
+Set \code{context_menu = FALSE} to disable it, or pass a character
+vector of item names to show only a subset - for example
+\code{context_menu = c("row_above", "row_below", "---", "remove_row")}.
+}
+
+\subsection{Cell Conditions}{
+
+Cell conditions allow dynamic cell properties based on other cell values.
+Each condition should be a list with:
+\itemize{
+\item \code{column} - The column to apply the condition to
+\item \code{when_column} - The column to check
+\item \code{when_value} - The value that triggers the condition
+\item \code{readOnly} - Set cell to read-only when condition is met
+\item \code{type} - Change cell type when condition is met
+\item \code{source} - Change dropdown options when condition is met
+}
+}
 }
 \examples{
-\dontrun{
+if (interactive()) {
 library(shiny)
-library(esq.handsontable)
 
 ui <- fluidPage(
-  esq_tableInput("my_table",
+  esq_tableInput("myTable",
     data = data.frame(
       name = c("Item 1", "Item 2"),
       category = c("A", "B"),
-      active = c(TRUE, FALSE)
+      active = c(TRUE, FALSE),
+      stringsAsFactors = FALSE
     ),
     columns = list(
       list(name = "name", type = "text"),
@@ -67,14 +127,15 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  observeEvent(input$my_table_edited, {
-    data <- jsonlite::fromJSON(input$my_table_edited)
+  observeEvent(input$myTable_edited, {
+    data <- jsonlite::fromJSON(input$myTable_edited)
     print(data)
   })
 }
 
 shinyApp(ui, server)
 }
+
 }
 \seealso{
 \code{\link{updateEsqTable}}

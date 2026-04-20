@@ -145,6 +145,29 @@ function OrderItems(props) {
     setItems(props.selectedOptions);
   }, [props.selectedOptions]);
 
+  // react-easy-sort appends a cloned element to document.body with
+  // position:fixed and z-index:1000.  MUI Dialog has z-index:1300, so the
+  // clone ends up *behind* the dialog backdrop — visually flying to the
+  // top-left corner.  We observe body for the clone being added and bump
+  // its z-index above the dialog.
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((m) => {
+        m.addedNodes.forEach((node) => {
+          if (
+            node.nodeType === 1 &&
+            node.classList?.contains('esq-sortable-item') &&
+            node.parentNode === document.body
+          ) {
+            node.style.zIndex = '100000';
+          }
+        });
+      });
+    });
+    observer.observe(document.body, { childList: true });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <SortableList
       onSortEnd={onSortEnd}
@@ -161,12 +184,13 @@ function OrderItems(props) {
       {items.map((item) => (
         <SortableItem key={item} disabled={props.disabled}>
           <div
-            className="item"
+            className="esq-sortable-item"
             style={{
               backgroundColor: '#ebebeb',
               padding: '10px',
               margin: '5px 0',
-              zIndex: 999999,
+              position: 'relative',
+              zIndex: 1,
               display: 'flex',
               alignItems: 'center',
               cursor: props.disabled ? 'not-allowed' : 'grab',

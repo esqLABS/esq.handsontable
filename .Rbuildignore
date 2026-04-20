@@ -16,3 +16,12 @@
 ^examples$
 ^\.DS_Store$
 ^Thumbs\.db$
+\.map$
+^abstract_rmedicine2026\.md$
+^slides$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.idea$
+^doc$
+^Meta$

@@ -142,10 +142,9 @@ export function processShinyData(data, arrayColumns = []) {
  *
  * @param {Array} data - Array of row objects
  * @param {Array<string>} arrayColumns - Column names that contain arrays to join
- * @param {string} noneValue - Value to treat as null (default: "--NONE--")
  * @returns {Array} Data ready for Shiny
  */
-export function prepareShinyData(data, arrayColumns = [], noneValue = "--NONE--") {
+export function prepareShinyData(data, arrayColumns = []) {
   if (!data || !Array.isArray(data)) return data;
 
   return data.map(row => {
@@ -158,12 +157,11 @@ export function prepareShinyData(data, arrayColumns = [], noneValue = "--NONE--"
       }
     });
 
-    // Convert NONE values to null
+    // Normalise empty values to null for clean R-side handling
     Object.keys(newRow).forEach(key => {
-      if (newRow[key] === noneValue) {
+      if (newRow[key] === '' || newRow[key] === undefined) {
         newRow[key] = null;
       }
-      // Empty arrays become null
       if (Array.isArray(newRow[key]) && newRow[key].length === 0) {
         newRow[key] = null;
       }

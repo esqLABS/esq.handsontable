@@ -26,8 +26,7 @@ import MultiSelectEditor from "../editors/MultiSelectEditor";
 
 // Utils
 import { forceCutRowContent } from "../utils/rowUtils";
-import { createColumnHeaderHook } from "../utils/columnUtils";
-import { prepareShinyData, processShinyData } from "../utils/dataUtils";
+import { prepareShinyData } from "../utils/dataUtils";
 
 // Register Handsontable modules
 registerAllModules();
@@ -35,15 +34,21 @@ registerAllModules();
 /**
  * Default context menu configuration
  */
-function createContextMenu(forceCutFn) {
+// Default order of items when context_menu === true
+const DEFAULT_CONTEXT_MENU_ORDER = [
+  'row_above', 'row_below', 'remove_row',
+  '---', 'undo', 'redo',
+  '---', 'copy', 'clear',
+  '---', 'clear_column'
+];
+
+function buildMenuItemMap(forceCutFn) {
   return {
-    items: {
-      'cut': {
-        name: 'Clear'
-      },
-      'row_below': {},
-      'row_above': {},
-      'remove_row': {
+    row_above: { key: 'row_above', value: {} },
+    row_below: { key: 'row_below', value: {} },
+    remove_row: {
+      key: 'remove_row',
+      value: {
         name() {
           if (this.countRows() === 1 && this.getSelectedLast()[0] === 0) {
             return "Clear row content";
@@ -52,24 +57,67 @@ function createContextMenu(forceCutFn) {
         },
         callback(key, selection) {
           const selectedRow = this.getSelectedLast()[0];
-
           if (this.countRows() === 1 && selectedRow === 0) {
             forceCutFn(this, selectedRow);
           } else {
             const startRow = selection[0].start.row;
             const endRow = selection[0].end.row;
             let numberOfRowsToRemove = endRow - startRow + 1;
-
             if (this.countRows() === numberOfRowsToRemove) {
               numberOfRowsToRemove = numberOfRowsToRemove - 1;
             }
-
             this.alter("remove_row", startRow, numberOfRowsToRemove);
           }
         }
       }
-    }
+    },
+    undo: { key: 'undo', value: {} },
+    redo: { key: 'redo', value: {} },
+    copy: { key: 'copy', value: {} },
+    clear: {
+      key: 'clear_selection',
+      value: {
+        name: 'Clear',
+        callback() {
+          const sel = this.getSelectedLast();
+          if (!sel) return;
+          const [r1, c1, r2, c2] = sel;
+          const rStart = Math.min(r1, r2);
+          const rEnd = Math.max(r1, r2);
+          const cStart = Math.min(c1, c2);
+          const cEnd = Math.max(c1, c2);
+          const changes = [];
+          for (let r = rStart; r <= rEnd; r++) {
+            for (let c = cStart; c <= cEnd; c++) {
+              changes.push([r, c, null]);
+            }
+          }
+          if (changes.length) this.setDataAtCell(changes);
+        }
+      }
+    },
+    clear_column: { key: 'clear_column', value: {} }
   };
+}
+
+function createContextMenu(forceCutFn, items) {
+  const map = buildMenuItemMap(forceCutFn);
+  const order = Array.isArray(items) ? items : DEFAULT_CONTEXT_MENU_ORDER;
+
+  const result = {};
+  let sepCounter = 0;
+  order.forEach(name => {
+    if (name === '---' || name === 'separator') {
+      result['sep' + (sepCounter++)] = '---------';
+      return;
+    }
+    const entry = map[name];
+    if (entry) {
+      result[entry.key] = entry.value;
+    }
+  });
+
+  return { items: result };
 }
 
 /**
@@ -88,6 +136,17 @@ function getRenderer(column) {
 }
 
 /**
+ * Create an empty row object with null values for each column
+ */
+function createEmptyRow(columns) {
+  const row = {};
+  columns.forEach(col => {
+    row[col.name] = null;
+  });
+  return row;
+}
+
+/**
  * EsqTable Component
  *
  * @param {Object} props
@@ -96,11 +155,10 @@ function getRenderer(column) {
  * @param {Function} props.onDataChange - Callback when data changes
  * @param {boolean} props.showActionButtons - Whether to show action buttons column
  * @param {boolean} props.contextMenu - Whether to enable context menu
- * @param {string} props.noneValue - Value to use for empty dropdown selection
  * @param {Object} props.columnDescriptions - Object mapping column names to tooltip descriptions
  * @param {string} props.height - Table height (default: "100%")
  * @param {string} props.width - Table width (default: "100%")
- * @param {Function} props.getCellProperties - Function to get dynamic cell properties (row, col, prop) => {}
+ * @param {Function} props.getCellProperties - Function to get dynamic cell properties (row, col, prop, tableData, columnNames) => {}
  */
 function EsqTable(props) {
   const {
@@ -109,7 +167,6 @@ function EsqTable(props) {
     onDataChange,
     showActionButtons = true,
     contextMenu = true,
-    noneValue = "--NONE--",
     columnDescriptions = {},
     height = "100%",
     width = "100%",
@@ -120,17 +177,29 @@ function EsqTable(props) {
   // Initialize data state
   const [data, setData] = useState(() => {
     if (!initialData || initialData.length === 0) {
-      // Create empty row with all column keys
-      const emptyRow = {};
-      columns.forEach(col => {
-        emptyRow[col.name] = null;
-      });
-      return [emptyRow];
+      return [createEmptyRow(columns)];
     }
     return initialData;
   });
 
   const hotTableRef = useRef(null);
+
+  // Sync data state when initialData prop changes (e.g. from updateEsqTable).
+  // Also call hotInstance.loadData() explicitly: Handsontable keeps an internal
+  // copy of the data array, and when the user adds/removes rows it mutates
+  // that copy in place. A bare setData() then hands React a new array of the
+  // same size, which @handsontable/react treats as a cell-level update and
+  // leaves extra rows on screen. loadData() is the only call that actually
+  // resets row count.
+  useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      setData(initialData);
+      const hot = hotTableRef.current?.hotInstance;
+      if (hot) {
+        hot.loadData(initialData);
+      }
+    }
+  }, [initialData]);
 
   // Get column names
   const columnNames = useMemo(() => columns.map(col => col.name), [columns]);
@@ -141,101 +210,151 @@ function EsqTable(props) {
     [columns]
   );
 
-  // Column header hook with descriptions
-  const colHeaderHook = useMemo(
-    () => createColumnHeaderHook(columnDescriptions),
-    [columnDescriptions]
-  );
+  // Ref that always holds the latest columnDescriptions for event handlers.
+  const descriptionsRef = useRef(columnDescriptions);
+  useEffect(() => { descriptionsRef.current = columnDescriptions; }, [columnDescriptions]);
 
-  // Handle data changes
-  const handleBeforeChange = useCallback((changes, source) => {
-    if (!changes || changes.length === 0) return;
+  // Ref to hold the latest data/columns for use in callbacks without stale closures
+  const latestRef = useRef({ data, columns, arrayColumns, onDataChange });
+  useEffect(() => {
+    latestRef.current = { data, columns, arrayColumns, onDataChange };
+  });
 
-    const [row, prop, oldValue, newValue] = changes[0];
+  // Notify Shiny of data changes
+  const notifyChange = useCallback((currentData) => {
+    const { arrayColumns: ac, onDataChange: cb } = latestRef.current;
+    if (cb) {
+      cb(prepareShinyData(currentData || latestRef.current.data, ac));
+    }
+  }, []);
 
-    // Skip if no actual change
-    if (data[row]?.[prop] === newValue) return;
-
-    // Handle NONE value conversion
-    setTimeout(() => {
-      const column = columns.find(c => c.name === prop);
-      if (column?.type === 'dropdown' && newValue === noneValue) {
-        data[row][prop] = null;
-      }
-
-      if (onDataChange) {
-        onDataChange(prepareShinyData(data, arrayColumns, noneValue));
-      }
-    }, 100);
-  }, [data, columns, noneValue, arrayColumns, onDataChange]);
+  // Handle data changes — use afterChange to read data AFTER Handsontable has
+  // applied the change, eliminating the fragile setTimeout workaround.
+  const handleAfterChange = useCallback((changes, source) => {
+    if (!changes || source === 'loadData') return;
+    notifyChange(latestRef.current.data);
+  }, [notifyChange]);
 
   // Handle row operations
   const handleAfterRemoveRow = useCallback(() => {
-    if (onDataChange) {
-      onDataChange(prepareShinyData(data, arrayColumns, noneValue));
-    }
-  }, [data, arrayColumns, noneValue, onDataChange]);
+    notifyChange();
+  }, [notifyChange]);
 
   const handleAfterCreateRow = useCallback(() => {
-    if (!Object.keys(data[0]).length) {
-      const emptyRow = {};
-      columns.forEach(col => {
-        emptyRow[col.name] = null;
-      });
-      setData([emptyRow]);
-      if (onDataChange) {
-        onDataChange([emptyRow]);
-      }
+    const { data: currentData, columns: cols } = latestRef.current;
+    if (!currentData[0] || !Object.keys(currentData[0]).length) {
+      const fresh = [createEmptyRow(cols)];
+      setData(fresh);
+      notifyChange(fresh);
     } else {
-      if (onDataChange) {
-        onDataChange(prepareShinyData(data, arrayColumns, noneValue));
-      }
+      notifyChange(currentData);
     }
-  }, [data, columns, arrayColumns, noneValue, onDataChange]);
+  }, [notifyChange]);
+
+  // Custom tooltip for column headers.
+  // Native `title` attributes are unreliable inside Handsontable, so we
+  // create a floating <div> appended to document.body and position it on
+  // mouseenter / hide on mouseleave.  Event listeners are attached to the
+  // HOT root element via delegation so they survive internal re-renders.
+  useEffect(() => {
+    const hot = hotTableRef.current?.hotInstance;
+    if (!hot) return;
+    const root = hot.rootElement;
+    if (!root) return;
+
+    // Create the tooltip element once, appended to body so it is never
+    // clipped by any overflow:hidden ancestor.
+    const tip = document.createElement('div');
+    tip.className = 'esq-col-tooltip';
+    document.body.appendChild(tip);
+
+    function show(e) {
+      const th = e.target.closest('thead th');
+      if (!th) return;
+      const span = th.querySelector('.colHeader');
+      const text = span ? span.textContent : th.textContent;
+      if (!text || text === 'Actions') return;
+      const descs = descriptionsRef.current;
+      const desc = descs && descs[text];
+      if (!desc) return;
+
+      tip.textContent = desc;
+      tip.style.display = 'block';
+
+      const rect = th.getBoundingClientRect();
+      tip.style.left = rect.left + rect.width / 2 + 'px';
+      tip.style.top = rect.bottom + 6 + 'px';
+    }
+
+    function hide() {
+      tip.style.display = 'none';
+    }
+
+    root.addEventListener('mouseenter', show, true);   // capture phase
+    root.addEventListener('mouseleave', hide, true);
+
+    return () => {
+      root.removeEventListener('mouseenter', show, true);
+      root.removeEventListener('mouseleave', hide, true);
+      tip.remove();
+    };
+  }, [data]);   // re-run when data arrives to guarantee HOT instance exists
 
   // Apply conditional cell properties
   useEffect(() => {
     if (!getCellProperties || !hotTableRef.current?.hotInstance) return;
 
     const hot = hotTableRef.current.hotInstance;
+    const colNames = columnNames;
+    const cols = columns;
 
     hot.updateSettings({
       cells(row, col) {
-        const prop = columnNames[col];
+        const prop = colNames[col];
         if (!prop) return {};
 
-        const column = columns.find(c => c.name === prop);
+        const column = cols.find(c => c.name === prop);
         if (!column) return {};
 
-        // Get dynamic properties from user function
-        const dynamicProps = getCellProperties(row, col, prop, hot.getData());
+        // Get dynamic properties; pass columnNames so the callback can map
+        // column names to indices for getData() array lookups.
+        const dynamicProps = getCellProperties(row, col, prop, hot.getData(), colNames);
 
-        // Build cell properties
         const cellProps = {};
 
-        // Handle readOnly
         if (dynamicProps.readOnly !== undefined) {
           cellProps.readOnly = dynamicProps.readOnly;
           if (dynamicProps.readOnly) {
+            // Condition active → grey out the cell
             cellProps.renderer = readOnlyRenderer;
+          } else {
+            // Condition lifted → restore the column's original renderer so
+            // the cell becomes editable again instead of staying locked.
+            if (column.type === 'dropdown' && column.validate !== false) {
+              cellProps.renderer = dropdownValidationRenderer;
+            } else {
+              cellProps.renderer = undefined;
+            }
+            // Restore the column's original type (e.g. 'dropdown') so
+            // Handsontable re-enables the editor for this cell.
+            cellProps.type = column.type === 'multiselect' ? 'text' : (column.type || 'text');
+            if (column.type === 'dropdown' && column.source) {
+              cellProps.source = column.source;
+              cellProps.allowEmpty = true;
+            }
           }
         }
 
-        // Handle type changes
         if (dynamicProps.type) {
           cellProps.type = dynamicProps.type;
         }
 
-        // Handle source changes for dropdowns
         if (dynamicProps.source) {
           cellProps.source = dynamicProps.source;
         }
 
-        // Handle custom renderer
         if (dynamicProps.renderer) {
           cellProps.renderer = dynamicProps.renderer;
-        } else if (!cellProps.readOnly && column.type === 'dropdown' && column.validate !== false) {
-          cellProps.renderer = dropdownValidationRenderer;
         }
 
         return cellProps;
@@ -245,14 +364,15 @@ function EsqTable(props) {
 
   // Handle multi-select data submission
   const handleMultiSelectSave = useCallback((values, col, row, originalValue) => {
+    const { data: currentData, arrayColumns: ac, onDataChange: cb } = latestRef.current;
     const prop = columnNames[col];
-    if (prop && data[row]) {
-      data[row][prop] = values.length > 0 ? values.join(", ") : null;
-      if (onDataChange) {
-        onDataChange(prepareShinyData(data, arrayColumns, noneValue));
+    if (prop && currentData[row]) {
+      currentData[row][prop] = values.length > 0 ? values.join(", ") : null;
+      if (cb) {
+        cb(prepareShinyData(currentData, ac));
       }
     }
-  }, [data, columnNames, arrayColumns, noneValue, onDataChange]);
+  }, [columnNames]);
 
   // Build column headers
   const colHeaders = useMemo(() => {
@@ -263,18 +383,21 @@ function EsqTable(props) {
     return headers;
   }, [columnNames, showActionButtons]);
 
-  // Build context menu config
-  const contextMenuConfig = useMemo(
-    () => contextMenu ? createContextMenu(forceCutRowContent) : false,
-    [contextMenu]
-  );
+  // Build context menu config. `contextMenu` may be:
+  //  - boolean (true → all default items, false → disabled)
+  //  - array of item names (show only those in the given order; "---" = separator)
+  const contextMenuConfig = useMemo(() => {
+    if (!contextMenu) return false;
+    if (Array.isArray(contextMenu) && contextMenu.length === 0) return false;
+    const items = Array.isArray(contextMenu) ? contextMenu : undefined;
+    return createContextMenu(forceCutRowContent, items);
+  }, [contextMenu]);
 
   return (
     <HotTable
       ref={hotTableRef}
       data={data}
       colHeaders={colHeaders}
-      afterGetColHeader={colHeaderHook}
       rowHeaders={true}
       autoWrapRow={true}
       autoWrapCol={true}
@@ -282,7 +405,7 @@ function EsqTable(props) {
       height={height}
       licenseKey={licenseKey}
       contextMenu={contextMenuConfig}
-      beforeChange={handleBeforeChange}
+      afterChange={handleAfterChange}
       afterRemoveRow={handleAfterRemoveRow}
       afterCreateRow={handleAfterCreateRow}
     >
@@ -292,9 +415,11 @@ function EsqTable(props) {
           type: column.type === 'multiselect' ? 'text' : (column.type || 'text')
         };
 
-        // Add dropdown source with NONE option
+        // Add dropdown source — allow empty so Delete/Backspace clears the cell
         if (column.type === 'dropdown' && column.source) {
-          settings.source = [noneValue, ...column.source];
+          settings.source = column.source;
+          settings.allowEmpty = true;
+          settings.allowInvalid = false;
           settings.renderer = getRenderer(column);
         }
 
@@ -306,6 +431,18 @@ function EsqTable(props) {
         // Add numeric type
         if (column.type === 'numeric') {
           settings.type = 'numeric';
+        }
+
+        // Add date type — uses Handsontable's built-in Pikaday calendar
+        if (column.type === 'date') {
+          settings.type = 'date';
+          settings.dateFormat = column.dateFormat || 'YYYY-MM-DD';
+          // correctFormat=true auto-converts user input to the declared format
+          settings.correctFormat = column.correctFormat !== false;
+          if (column.defaultDate) {
+            settings.defaultDate = column.defaultDate;
+          }
+          settings.allowEmpty = true;
         }
 
         // Add width if specified

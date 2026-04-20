@@ -4,43 +4,20 @@
 \name{esq.handsontable-package}
 \alias{esq.handsontable}
 \alias{esq.handsontable-package}
-\title{esq.handsontable: Interactive Data Tables with Handsontable for Shiny}
+\title{esq.handsontable: Interactive Data Tables with 'Handsontable' for 'Shiny'}
 \description{
-A powerful, reusable Handsontable wrapper for R Shiny applications.
-Provides interactive data tables with dropdowns, multi-select with sorting,
-validation, conditional cell disabling, context menu, and more.
+Provides an interactive, Excel-like data table input for 'Shiny' applications. Wraps 'Handsontable' \url{https://handsontable.com/} and 'React' to offer editable tables with dropdown columns, multi-select with sorting, validation, conditional cell disabling, context menu, and dynamic option updates at runtime.
 }
-\section{Main Functions}{
-\itemize{
-  \item \code{\link{esq_tableInput}} - Create an interactive table
-
-  \item \code{\link{updateEsqTable}} - Update dropdown options dynamically
-}
-}
-
-\section{Column Types}{
-\itemize{
-  \item \strong{text} - Standard text input
-  \item \strong{numeric} - Number input with validation
-  \item \strong{checkbox} - Boolean checkbox
-  \item \strong{dropdown} - Single-select dropdown
-  \item \strong{multiselect} - Multi-select with optional drag-and-drop sorting
-}
-}
-
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/esqlabs/esq.handsontable}
   \item Report bugs at \url{https://github.com/esqlabs/esq.handsontable/issues}
 }
+
 }
 \author{
-\strong{Maintainer}: esqLABS GmbH \email{info@esqlabs.com}
+\strong{Maintainer}: Anastasia Kostiv \email{anastasiia.kostiv.ext@esqlabs.com}
 
-Authors:
-\itemize{
-  \item Anastasia Kostiv
-}
 }
 \keyword{internal}

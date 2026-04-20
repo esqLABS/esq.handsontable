@@ -1,0 +1,25 @@
+url: https://esqlabs.github.io/esq.handsontable/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, articles, reference, news]
+    right: [github]
+
+reference:
+  - title: Functions
+    contents:
+      - esq_tableInput
+      - updateEsqTable
+
+articles:
+  - title: Guides
+    navbar: ~
+    contents:
+      - getting-started
+      - column-types
+      - conditional-cells
+      - dynamic-updates
+      - advanced-usage

@@ -2,3 +2,9 @@
 
 export(esq_tableInput)
 export(updateEsqTable)
+importFrom(base64enc,base64encode)
+importFrom(htmltools,htmlDependency)
+importFrom(htmltools,tags)
+importFrom(jsonlite,toJSON)
+importFrom(reactR,createReactShinyInput)
+importFrom(shiny,restoreInput)
