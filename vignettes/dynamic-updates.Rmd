@@ -12,9 +12,13 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  eval = FALSE
+  comment = "#>"
 )
+```
+
+```{r load}
+library(shiny)
+library(esq.handsontable)
 ```
 
 ## Introduction
@@ -24,64 +28,72 @@ options, or column configuration at runtime — without recreating the widget.
 
 ## Syntax
 
+The function signature, with all arguments optional except `session` and
+`inputId`:
+
 ```{r syntax}
-updateEsqTable(
-  session,            # Shiny session object
-  inputId,            # Table input ID
-  data = NULL,        # New data frame (replaces current rows)
-  options = NULL,     # Named list: column name -> new option vector
-  columns = NULL      # Updated column configurations (same format as esq_tableInput)
-)
+args(updateEsqTable)
 ```
 
-All three arguments are optional; pass only what you need to change.
+Pass only what you need to change:
+
+- `data` - replacement data frame for all rows
+- `options` - named list mapping column name to new option vector
+- `columns` - updated column configurations (same format as `esq_tableInput()`)
 
 ## Basic Example
 
-```{r basic}
-library(shiny)
-library(esq.handsontable)
+Build a sales table whose `country` dropdown can be swapped per region:
 
+```{r basic-data}
+sales_data <- data.frame(
+  product = c("Widget", "Gadget"),
+  country = c("USA", "Canada"),
+  stringsAsFactors = FALSE
+)
+
+sales_columns <- list(
+  list(name = "product", type = "text"),
+  list(name = "country", type = "dropdown",
+       source = c("USA", "Canada", "Mexico"))
+)
+
+region_choices <- list(
+  "North America" = c("USA", "Canada", "Mexico"),
+  "Europe"        = c("UK", "Germany", "France", "Spain"),
+  "Asia"          = c("Japan", "China", "South Korea", "India")
+)
+
+region_choices[["Europe"]]
+```
+
+Hook it up in a shiny app:
+
+```{r basic-app}
 ui <- fluidPage(
-  selectInput("region", "Region:",
-    choices = c("North America", "Europe", "Asia")),
+  selectInput("region", "Region:", choices = names(region_choices)),
   actionButton("update", "Update Countries"),
-
-  esq_tableInput("sales",
-    data = data.frame(
-      product = c("Widget", "Gadget"),
-      country = c("USA", "Canada")
-    ),
-    columns = list(
-      list(name = "product", type = "text"),
-      list(name = "country", type = "dropdown",
-           source = c("USA", "Canada", "Mexico"))
-    )
-  )
+  esq_tableInput("sales", data = sales_data, columns = sales_columns)
 )
 
 server <- function(input, output, session) {
   observeEvent(input$update, {
-    countries <- switch(input$region,
-      "North America" = c("USA", "Canada", "Mexico"),
-      "Europe" = c("UK", "Germany", "France", "Spain"),
-      "Asia" = c("Japan", "China", "South Korea", "India")
-    )
-
     updateEsqTable(session, "sales",
-      options = list(country = countries)
+      options = list(country = region_choices[[input$region]])
     )
   })
 }
 
-shinyApp(ui, server)
+if (interactive()) {
+  shinyApp(ui, server)
+}
 ```
 
 ## Replacing Table Data
 
 Pass a new data frame to swap out all rows:
 
-```{r data}
+```{r data, eval = FALSE}
 observeEvent(input$reset, {
   updateEsqTable(session, "sales", data = original_data)
 })
@@ -95,25 +107,31 @@ observeEvent(input$region, {
 
 ## Update Multiple Columns
 
+A single call can update several option vectors at once:
+
 ```{r multiple}
-updateEsqTable(session, "my_table",
-  options = list(
-    country = c("USA", "Canada"),
-    state = c("California", "Texas"),
-    city = c("Los Angeles", "Houston")
-  )
+batched_options <- list(
+  country = c("USA", "Canada"),
+  state   = c("California", "Texas"),
+  city    = c("Los Angeles", "Houston")
 )
+
+names(batched_options)
+```
+
+```{r multiple-call, eval = FALSE}
+updateEsqTable(session, "my_table", options = batched_options)
 ```
 
 ## Reactive Updates
 
-```{r reactive}
+```{r reactive, eval = FALSE}
 server <- function(input, output, session) {
   available_options <- reactive({
     # Could be a database query
     switch(input$category,
       "Electronics" = c("Phones", "Laptops", "Tablets"),
-      "Clothing" = c("Shirts", "Pants", "Shoes"),
+      "Clothing"    = c("Shirts", "Pants", "Shoes"),
       c("Other")
     )
   })
@@ -128,18 +146,22 @@ server <- function(input, output, session) {
 
 ## Cascading Dropdowns
 
-```{r cascading}
+A lookup table maps each country to its list of states:
+
+```{r cascading-data}
 location_data <- list(
-  "USA" = c("California", "Texas", "New York"),
+  "USA"    = c("California", "Texas", "New York"),
   "Canada" = c("Ontario", "Quebec", "BC")
 )
 
+location_data[["USA"]]
+```
+
+```{r cascading-server, eval = FALSE}
 server <- function(input, output, session) {
   observeEvent(input$country, {
-    states <- location_data[[input$country]]
-
     updateEsqTable(session, "location_table",
-      options = list(state = states)
+      options = list(state = location_data[[input$country]])
     )
   })
 }
@@ -147,7 +169,7 @@ server <- function(input, output, session) {
 
 ## Database-Driven Updates
 
-```{r database}
+```{r database, eval = FALSE}
 server <- function(input, output, session) {
   observeEvent(input$refresh, {
     # Query from database
@@ -169,7 +191,7 @@ server <- function(input, output, session) {
 
 When using modules, the session is automatically namespaced:
 
-```{r modules}
+```{r modules, eval = FALSE}
 tableModuleServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     observeEvent(input$refresh, {
@@ -189,7 +211,7 @@ tableModuleServer <- function(id) {
 Option updates merge cumulatively on the client, so either form works.
 A single call avoids redundant round-trips and is preferred.
 
-```{r batch}
+```{r batch, eval = FALSE}
 # Preferred: single call
 updateEsqTable(session, "table",
   options = list(
@@ -206,7 +228,7 @@ updateEsqTable(session, "table", options = list(col2 = opts2))
 
 ### Debouncing
 
-```{r debounce}
+```{r debounce, eval = FALSE}
 server <- function(input, output, session) {
   search_debounced <- debounce(reactive(input$search), 300)
 

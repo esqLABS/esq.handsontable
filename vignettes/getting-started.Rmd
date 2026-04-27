@@ -12,8 +12,7 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  eval = FALSE
+  comment = "#>"
 )
 ```
 
@@ -21,37 +20,60 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-`esq.handsontable` is an R Shiny package that provides an interactive, Excel-like data table component. Built on [Handsontable](https://handsontable.com/) and React, it offers features like dropdowns, multi-select, validation, conditional cell disabling, and more.
+`esq.handsontable` is an R shiny package that provides an interactive,
+Excel-like data table component. Built on
+[Handsontable](https://handsontable.com/) and React, it offers features like
+dropdowns, multi-select, validation, conditional cell disabling, and more.
 
 ## Installation
 
-```{r install}
+```{r install, eval = FALSE}
 # Install from GitHub
 devtools::install_github("esqlabs/esq.handsontable")
 ```
 
 ## Quick Start
 
-Here's a minimal example:
+Build a small data set and a matching column configuration:
 
-```{r quick-start}
+```{r quick-start-data}
 library(shiny)
 library(esq.handsontable)
 
-ui <- fluidPage(
-  esq_tableInput("my_table",
-    data = data.frame(
-      name = c("Alice", "Bob", "Charlie"),
-      age = c(25, 30, 35),
-      active = c(TRUE, FALSE, TRUE)
-    ),
-    columns = list(
-      list(name = "name", type = "text"),
-      list(name = "age", type = "numeric"),
-      list(name = "active", type = "checkbox")
-    )
-  )
+people <- data.frame(
+  name = c("Alice", "Bob", "Charlie"),
+  age = c(25, 30, 35),
+  active = c(TRUE, FALSE, TRUE),
+  stringsAsFactors = FALSE
 )
+
+people_columns <- list(
+  list(name = "name", type = "text"),
+  list(name = "age", type = "numeric"),
+  list(name = "active", type = "checkbox")
+)
+
+people
+```
+
+`esq_tableInput()` returns a shiny UI element. You can construct it outside
+of an app to inspect the structure:
+
+```{r quick-start-ui}
+table_ui <- esq_tableInput(
+  "my_table",
+  data = people,
+  columns = people_columns
+)
+
+class(table_ui)
+```
+
+Wrap it in a shiny app to use it interactively. The `shinyApp()` call only
+starts when the vignette is run interactively:
+
+```{r quick-start-app}
+ui <- fluidPage(table_ui)
 
 server <- function(input, output, session) {
   observeEvent(input$my_table_edited, {
@@ -60,7 +82,9 @@ server <- function(input, output, session) {
   })
 }
 
-shinyApp(ui, server)
+if (interactive()) {
+  shinyApp(ui, server)
+}
 ```
 
 ## Core Concepts
@@ -94,27 +118,35 @@ shinyApp(ui, server)
 
 ### Context Menu
 
-Right-click any cell to access: insert row above/below, remove row, undo/redo, copy, clear selection, and clear column.
+Right-click any cell to access: insert row above/below, remove row,
+undo/redo, copy, clear selection, and clear column.
 
 `context_menu` accepts:
 
 - `TRUE` (default) — show all items
 - `FALSE` — disable the menu
-- a character vector — show only the listed items, in order. Use `"---"` to insert a separator.
+- a character vector — show only the listed items, in order. Use `"---"`
+  to insert a separator.
 
 ```{r context-menu-custom}
-esq_tableInput("my_table",
-  data = my_data,
-  columns = my_columns,
+custom_menu_ui <- esq_tableInput(
+  "my_table",
+  data = people,
+  columns = people_columns,
   context_menu = c("row_above", "row_below", "---", "remove_row", "undo", "redo")
 )
+
+inherits(custom_menu_ui, "shiny.tag")
 ```
 
-Valid item names: `row_above`, `row_below`, `remove_row`, `undo`, `redo`, `copy`, `clear`, `clear_column`.
+Valid item names: `row_above`, `row_below`, `remove_row`, `undo`, `redo`,
+`copy`, `clear`, `clear_column`.
 
 ### Retrieving Data
 
-```{r retrieve}
+In a shiny server, parse the JSON sent on each edit:
+
+```{r retrieve, eval = FALSE}
 observeEvent(input$my_table_edited, {
   data <- jsonlite::fromJSON(input$my_table_edited)
   # Use the data...

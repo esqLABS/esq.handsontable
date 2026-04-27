@@ -1,10 +1,10 @@
 Package: esq.handsontable
-Title: Interactive Data Tables with 'Handsontable' for 'Shiny'
+Title: Interactive Data Tables with 'Handsontable' for 'shiny'
 Version: 1.0.0
 Authors@R: c(
     person("Anastasia", "Kostiv", email = "anastasiia.kostiv.ext@esqlabs.com", role = c("aut", "cre"))
     )
-Description: Provides an interactive, Excel-like data table input for 'Shiny'
+Description: Provides an interactive, Excel-like data table input for 'shiny'
     applications. Wraps 'Handsontable' <https://handsontable.com/> and 'React'
     to offer editable tables with dropdown columns, multi-select with sorting,
     validation, conditional cell disabling, context menu, and dynamic option
