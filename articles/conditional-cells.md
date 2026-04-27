@@ -1,5 +1,10 @@
 # Conditional Cell Properties
 
+``` r
+library(shiny)
+library(esq.handsontable)
+```
+
 ## Introduction
 
 The `cell_conditions` parameter allows you to dynamically change cell
@@ -9,7 +14,7 @@ where fields become relevant or irrelevant based on user selections.
 ## Basic Syntax
 
 ``` r
-cell_conditions = list(
+example_condition <- list(
   list(
     column = "target_column",       # Column to modify
     when_column = "trigger_column", # Column to watch
@@ -17,6 +22,14 @@ cell_conditions = list(
     readOnly = TRUE                 # Property to set
   )
 )
+
+str(example_condition)
+#> List of 1
+#>  $ :List of 4
+#>   ..$ column     : chr "target_column"
+#>   ..$ when_column: chr "trigger_column"
+#>   ..$ when_value : chr "trigger_value"
+#>   ..$ readOnly   : logi TRUE
 ```
 
 ## Simple Example
@@ -24,45 +37,56 @@ cell_conditions = list(
 Disable fields based on a data type selection:
 
 ``` r
-esq_tableInput("analysis",
-  data = data.frame(
-    name = c("Analysis 1", "Analysis 2"),
-    dataType = c("Simulated", "Observed"),
-    scenario = c("Baseline", ""),
-    dataset = c("", "Clinical Data")
+analysis_data <- data.frame(
+  name = c("Analysis 1", "Analysis 2"),
+  dataType = c("Simulated", "Observed"),
+  scenario = c("Baseline", ""),
+  dataset = c("", "Clinical Data"),
+  stringsAsFactors = FALSE
+)
+
+analysis_columns <- list(
+  list(name = "name", type = "text"),
+  list(name = "dataType", type = "dropdown",
+       source = c("Simulated", "Observed")),
+  list(name = "scenario", type = "dropdown",
+       source = c("Baseline", "Treatment A", "Treatment B")),
+  list(name = "dataset", type = "dropdown",
+       source = c("Clinical Data", "Lab Data"))
+)
+
+analysis_conditions <- list(
+  # Disable scenario when Observed
+  list(
+    column = "scenario",
+    when_column = "dataType",
+    when_value = "Observed",
+    readOnly = TRUE
   ),
-  columns = list(
-    list(name = "name", type = "text"),
-    list(name = "dataType", type = "dropdown",
-         source = c("Simulated", "Observed")),
-    list(name = "scenario", type = "dropdown",
-         source = c("Baseline", "Treatment A", "Treatment B")),
-    list(name = "dataset", type = "dropdown",
-         source = c("Clinical Data", "Lab Data"))
-  ),
-  cell_conditions = list(
-    # Disable scenario when Observed
-    list(
-      column = "scenario",
-      when_column = "dataType",
-      when_value = "Observed",
-      readOnly = TRUE
-    ),
-    # Disable dataset when Simulated
-    list(
-      column = "dataset",
-      when_column = "dataType",
-      when_value = "Simulated",
-      readOnly = TRUE
-    )
+  # Disable dataset when Simulated
+  list(
+    column = "dataset",
+    when_column = "dataType",
+    when_value = "Simulated",
+    readOnly = TRUE
   )
 )
+
+analysis_ui <- esq_tableInput(
+  "analysis",
+  data = analysis_data,
+  columns = analysis_columns,
+  cell_conditions = analysis_conditions
+)
+
+inherits(analysis_ui, "shiny.tag")
+#> [1] FALSE
 ```
 
 ## Multiple Conditions on Same Column
 
 ``` r
-cell_conditions = list(
+payment_conditions <- list(
   # Disable amount for Free
   list(
     column = "amount",
@@ -78,6 +102,9 @@ cell_conditions = list(
     readOnly = TRUE
   )
 )
+
+length(payment_conditions)
+#> [1] 2
 ```
 
 ## Cascading Conditions
@@ -85,7 +112,7 @@ cell_conditions = list(
 Disable multiple columns based on one trigger:
 
 ``` r
-cell_conditions = list(
+shipping_conditions <- list(
   # If shipping is "Pickup", disable these fields:
   list(
     column = "address",
@@ -106,38 +133,52 @@ cell_conditions = list(
     readOnly = TRUE
   )
 )
+
+vapply(shipping_conditions, `[[`, character(1), "column")
+#> [1] "address"       "delivery_date" "shipping_cost"
 ```
 
 ## Real-World Example: Clinical Trial
 
 ``` r
-esq_tableInput("trial_config",
-  data = data.frame(
-    arm = c("Control", "Treatment A"),
-    arm_type = c("Placebo", "Active"),
-    drug = c("", "Drug X"),
-    dose = c(0, 100),
-    frequency = c("", "Daily")
-  ),
-  columns = list(
-    list(name = "arm", type = "text", width = 120),
-    list(name = "arm_type", type = "dropdown",
-         source = c("Placebo", "Active"), width = 100),
-    list(name = "drug", type = "text", width = 120),
-    list(name = "dose", type = "numeric", width = 80),
-    list(name = "frequency", type = "dropdown",
-         source = c("Daily", "Twice Daily", "Weekly"), width = 100)
-  ),
-  cell_conditions = list(
-    # Placebo arms don't need drug info
-    list(column = "drug", when_column = "arm_type",
-         when_value = "Placebo", readOnly = TRUE),
-    list(column = "dose", when_column = "arm_type",
-         when_value = "Placebo", readOnly = TRUE),
-    list(column = "frequency", when_column = "arm_type",
-         when_value = "Placebo", readOnly = TRUE)
-  )
+trial_data <- data.frame(
+  arm = c("Control", "Treatment A"),
+  arm_type = c("Placebo", "Active"),
+  drug = c("", "Drug X"),
+  dose = c(0, 100),
+  frequency = c("", "Daily"),
+  stringsAsFactors = FALSE
 )
+
+trial_columns <- list(
+  list(name = "arm", type = "text", width = 120),
+  list(name = "arm_type", type = "dropdown",
+       source = c("Placebo", "Active"), width = 100),
+  list(name = "drug", type = "text", width = 120),
+  list(name = "dose", type = "numeric", width = 80),
+  list(name = "frequency", type = "dropdown",
+       source = c("Daily", "Twice Daily", "Weekly"), width = 100)
+)
+
+trial_conditions <- list(
+  # Placebo arms don't need drug info
+  list(column = "drug", when_column = "arm_type",
+       when_value = "Placebo", readOnly = TRUE),
+  list(column = "dose", when_column = "arm_type",
+       when_value = "Placebo", readOnly = TRUE),
+  list(column = "frequency", when_column = "arm_type",
+       when_value = "Placebo", readOnly = TRUE)
+)
+
+trial_ui <- esq_tableInput(
+  "trial_config",
+  data = trial_data,
+  columns = trial_columns,
+  cell_conditions = trial_conditions
+)
+
+inherits(trial_ui, "shiny.tag")
+#> [1] FALSE
 ```
 
 ## How It Works
@@ -157,7 +198,7 @@ esq_tableInput("trial_config",
 4.  **Document your logic** - Add comments explaining rules
 
 ``` r
-cell_conditions = list(
+documented_conditions <- list(
   # Business rule: Observed data uses datasets, not scenarios
   list(
     column = "scenario",
@@ -166,6 +207,9 @@ cell_conditions = list(
     readOnly = TRUE
   )
 )
+
+documented_conditions[[1]]$column
+#> [1] "scenario"
 ```
 
 ## Limitations

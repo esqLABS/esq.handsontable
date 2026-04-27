@@ -4,7 +4,7 @@
 
 ## Introduction
 
-`esq.handsontable` is an R Shiny package that provides an interactive,
+`esq.handsontable` is an R shiny package that provides an interactive,
 Excel-like data table component. Built on
 [Handsontable](https://handsontable.com/) and React, it offers features
 like dropdowns, multi-select, validation, conditional cell disabling,
@@ -19,26 +19,53 @@ devtools::install_github("esqlabs/esq.handsontable")
 
 ## Quick Start
 
-Here’s a minimal example:
+Build a small data set and a matching column configuration:
 
 ``` r
 library(shiny)
 library(esq.handsontable)
 
-ui <- fluidPage(
-  esq_tableInput("my_table",
-    data = data.frame(
-      name = c("Alice", "Bob", "Charlie"),
-      age = c(25, 30, 35),
-      active = c(TRUE, FALSE, TRUE)
-    ),
-    columns = list(
-      list(name = "name", type = "text"),
-      list(name = "age", type = "numeric"),
-      list(name = "active", type = "checkbox")
-    )
-  )
+people <- data.frame(
+  name = c("Alice", "Bob", "Charlie"),
+  age = c(25, 30, 35),
+  active = c(TRUE, FALSE, TRUE),
+  stringsAsFactors = FALSE
 )
+
+people_columns <- list(
+  list(name = "name", type = "text"),
+  list(name = "age", type = "numeric"),
+  list(name = "active", type = "checkbox")
+)
+
+people
+#>      name age active
+#> 1   Alice  25   TRUE
+#> 2     Bob  30  FALSE
+#> 3 Charlie  35   TRUE
+```
+
+[`esq_tableInput()`](https://esqlabs.github.io/esq.handsontable/reference/esq_tableInput.md)
+returns a shiny UI element. You can construct it outside of an app to
+inspect the structure:
+
+``` r
+table_ui <- esq_tableInput(
+  "my_table",
+  data = people,
+  columns = people_columns
+)
+
+class(table_ui)
+#> [1] "shiny.tag.list" "list"
+```
+
+Wrap it in a shiny app to use it interactively. The
+[`shinyApp()`](https://rdrr.io/pkg/shiny/man/shinyApp.html) call only
+starts when the vignette is run interactively:
+
+``` r
+ui <- fluidPage(table_ui)
 
 server <- function(input, output, session) {
   observeEvent(input$my_table_edited, {
@@ -47,7 +74,9 @@ server <- function(input, output, session) {
   })
 }
 
-shinyApp(ui, server)
+if (interactive()) {
+  shinyApp(ui, server)
+}
 ```
 
 ## Core Concepts
@@ -92,17 +121,23 @@ undo/redo, copy, clear selection, and clear column.
   to insert a separator.
 
 ``` r
-esq_tableInput("my_table",
-  data = my_data,
-  columns = my_columns,
+custom_menu_ui <- esq_tableInput(
+  "my_table",
+  data = people,
+  columns = people_columns,
   context_menu = c("row_above", "row_below", "---", "remove_row", "undo", "redo")
 )
+
+inherits(custom_menu_ui, "shiny.tag")
+#> [1] FALSE
 ```
 
 Valid item names: `row_above`, `row_below`, `remove_row`, `undo`,
 `redo`, `copy`, `clear`, `clear_column`.
 
 ### Retrieving Data
+
+In a shiny server, parse the JSON sent on each edit:
 
 ``` r
 observeEvent(input$my_table_edited, {

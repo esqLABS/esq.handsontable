@@ -1,43 +1,95 @@
 # Advanced Usage
 
+``` r
+library(shiny)
+library(esq.handsontable)
+```
+
 ## Context Menu
 
-The table includes a built-in right-click context menu:
-
-- Add row above
-- Add row below
-- Remove row
+The table includes a built-in right-click context menu (insert row above
+/ below, remove row, undo / redo, copy, clear selection, clear column).
 
 ### Tracking Row Changes
 
+Compare row counts before and after each edit. The helper below is the
+logic an
+[`observeEvent()`](https://rdrr.io/pkg/shiny/man/observeEvent.html)
+would call:
+
+``` r
+classify_row_change <- function(old_count, new_count) {
+  if (new_count > old_count) "added"
+  else if (new_count < old_count) "removed"
+  else "unchanged"
+}
+
+classify_row_change(5, 6)
+#> [1] "added"
+classify_row_change(5, 4)
+#> [1] "removed"
+classify_row_change(5, 5)
+#> [1] "unchanged"
+```
+
 ``` r
 server <- function(input, output, session) {
-  row_count <- reactiveVal(5)  # Initial rows
+  row_count <- reactiveVal(5)
 
   observeEvent(input$my_table_edited, {
     data <- jsonlite::fromJSON(input$my_table_edited)
-    new_count <- nrow(data)
-
-    if (new_count > row_count()) {
-      showNotification("Row added")
-    } else if (new_count < row_count()) {
-      showNotification("Row removed")
-    }
-
-    row_count(new_count)
+    change <- classify_row_change(row_count(), nrow(data))
+    if (change == "added")   showNotification("Row added")
+    if (change == "removed") showNotification("Row removed")
+    row_count(nrow(data))
   })
 }
 ```
 
 ## Data Validation
 
-### Custom Validation
+Define a pure validator function that you can both run in a vignette and
+call from a shiny
+[`observeEvent()`](https://rdrr.io/pkg/shiny/man/observeEvent.html):
+
+``` r
+validate_data <- function(data) {
+  errors <- character()
+
+  if (any(is.na(data$name) | data$name == "")) {
+    errors <- c(errors, "Name required")
+  }
+
+  if (any(data$quantity < 0, na.rm = TRUE)) {
+    errors <- c(errors, "Quantity must be >= 0")
+  }
+
+  errors
+}
+
+# A clean dataset returns no errors
+clean <- data.frame(
+  name = c("A", "B"),
+  quantity = c(1, 2),
+  stringsAsFactors = FALSE
+)
+validate_data(clean)
+#> character(0)
+
+# A dirty dataset reports both rules
+dirty <- data.frame(
+  name = c("", "B"),
+  quantity = c(-1, 2),
+  stringsAsFactors = FALSE
+)
+validate_data(dirty)
+#> [1] "Name required"         "Quantity must be >= 0"
+```
 
 ``` r
 server <- function(input, output, session) {
   observeEvent(input$my_table_edited, {
     data <- jsonlite::fromJSON(input$my_table_edited)
-
     errors <- validate_data(data)
 
     if (length(errors) > 0) {
@@ -47,62 +99,60 @@ server <- function(input, output, session) {
       )
     }
   })
-
-  validate_data <- function(data) {
-    errors <- character()
-
-    if (any(is.na(data$name) | data$name == "")) {
-      errors <- c(errors, "Name required")
-    }
-
-    if (any(data$quantity < 0, na.rm = TRUE)) {
-      errors <- c(errors, "Quantity must be >= 0")
-    }
-
-    return(errors)
-  }
 }
 ```
 
 ## Export Data
 
-### CSV Download
+A small dataset to demonstrate CSV / JSON export:
+
+``` r
+table_data <- data.frame(
+  product = c("Widget", "Gadget"),
+  price = c(29.99, 49.99),
+  stringsAsFactors = FALSE
+)
+
+csv_path <- tempfile(fileext = ".csv")
+write.csv(table_data, csv_path, row.names = FALSE)
+file.exists(csv_path)
+#> [1] TRUE
+
+json_path <- tempfile(fileext = ".json")
+jsonlite::write_json(table_data, json_path, pretty = TRUE)
+readLines(json_path, n = 3)
+#> [1] "["                            "  {"                         
+#> [3] "    \"product\": \"Widget\","
+```
+
+The same logic plugged into a
+[`downloadHandler()`](https://rdrr.io/pkg/shiny/man/downloadHandler.html):
 
 ``` r
 ui <- fluidPage(
-  esq_tableInput("data_table", ...),
+  esq_tableInput("data_table", data = table_data,
+                 columns = list(list(name = "product", type = "text"),
+                                list(name = "price", type = "numeric"))),
   downloadButton("download", "Download CSV")
 )
 
 server <- function(input, output, session) {
-  table_data <- reactiveVal(initial_data)
+  current_data <- reactiveVal(table_data)
 
   observeEvent(input$data_table_edited, {
-    table_data(jsonlite::fromJSON(input$data_table_edited))
+    current_data(jsonlite::fromJSON(input$data_table_edited))
   })
 
   output$download <- downloadHandler(
-    filename = function() {
-      paste0("data_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      write.csv(table_data(), file, row.names = FALSE)
-    }
+    filename = function() paste0("data_", Sys.Date(), ".csv"),
+    content = function(file) write.csv(current_data(), file, row.names = FALSE)
+  )
+
+  output$download_json <- downloadHandler(
+    filename = function() paste0("data_", Sys.Date(), ".json"),
+    content = function(file) jsonlite::write_json(current_data(), file, pretty = TRUE)
   )
 }
-```
-
-### JSON Download
-
-``` r
-output$download_json <- downloadHandler(
-  filename = function() {
-    paste0("data_", Sys.Date(), ".json")
-  },
-  content = function(file) {
-    jsonlite::write_json(table_data(), file, pretty = TRUE)
-  }
-)
 ```
 
 ## Auto-Save Pattern
@@ -130,7 +180,7 @@ library(plotly)
 
 ui <- fluidPage(
   fluidRow(
-    column(6, esq_tableInput("data", ...)),
+    column(6, esq_tableInput("data", data = initial_data, columns = cols)),
     column(6, plotlyOutput("chart"))
   )
 )
@@ -152,29 +202,32 @@ server <- function(input, output, session) {
 
 ## Custom CSS Styling
 
+Build the styling chunk with `htmltools` so it can be inspected before
+being dropped into a shiny `tags$head()`:
+
+``` r
+custom_css <- htmltools::tags$style(htmltools::HTML("
+  .esq-handsontable th {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+  .esq-handsontable td.htDimmed {
+    background: #fafafa;
+    color: #999;
+  }
+  .esq-handsontable td.htInvalid {
+    background: #ffebee !important;
+  }
+"))
+
+inherits(custom_css, "shiny.tag")
+#> [1] TRUE
+```
+
 ``` r
 ui <- fluidPage(
-  tags$head(
-    tags$style(HTML("
-      /* Header styling */
-      .esq-handsontable th {
-        background: #f5f5f5;
-        font-weight: 600;
-      }
-
-      /* Read-only cells */
-      .esq-handsontable td.htDimmed {
-        background: #fafafa;
-        color: #999;
-      }
-
-      /* Invalid cells */
-      .esq-handsontable td.htInvalid {
-        background: #ffebee !important;
-      }
-    "))
-  ),
-  esq_tableInput("styled_table", ...)
+  tags$head(custom_css),
+  esq_tableInput("styled_table", data = my_data, columns = my_columns)
 )
 ```
 
@@ -197,31 +250,53 @@ Built-in Handsontable shortcuts:
 
 ## Error Handling
 
+A safe parser that returns `NULL` on bad JSON:
+
+``` r
+safe_parse <- function(json) {
+  tryCatch(
+    jsonlite::fromJSON(json),
+    error = function(e) NULL
+  )
+}
+
+safe_parse('[{"a": 1}]')
+#>   a
+#> 1 1
+safe_parse("not valid json")
+#> NULL
+```
+
 ``` r
 observeEvent(input$my_table_edited, {
-  data <- tryCatch({
-    jsonlite::fromJSON(input$my_table_edited)
-  }, error = function(e) {
+  data <- safe_parse(input$my_table_edited)
+  if (is.null(data)) {
     showNotification("Error parsing data", type = "error")
-    return(NULL)
-  })
-
-  if (is.null(data)) return()
-
+    return()
+  }
   # Process data...
 })
 ```
 
 ## Troubleshooting
 
-**Table not rendering?** - Check package installation - Verify data
-frame structure
+**Table not rendering?**
 
-**Dropdowns empty?** - Ensure `source` is a character vector - Check for
-typos in column names
+- Check package installation
+- Verify data frame structure
 
-**Updates not working?** - Verify `inputId` matches - Check session is
-passed correctly
+**Dropdowns empty?**
 
-**Performance issues?** - Reduce row count (use pagination) - Use
-simpler column types - Minimize columns
+- Ensure `source` is a character vector
+- Check for typos in column names
+
+**Updates not working?**
+
+- Verify `inputId` matches
+- Check session is passed correctly
+
+**Performance issues?**
+
+- Reduce row count (use pagination)
+- Use simpler column types
+- Minimize columns

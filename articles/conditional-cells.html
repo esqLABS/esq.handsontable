@@ -59,7 +59,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Conditional Cell Properties</h1>
                         <h4 data-toc-skip class="author">esqLABS</h4>
             
-            <h4 data-toc-skip class="date">2026-04-20</h4>
+            <h4 data-toc-skip class="date">2026-04-27</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/esqlabs/esq.handsontable/blob/main/vignettes/conditional-cells.Rmd" class="external-link"><code>vignettes/conditional-cells.Rmd</code></a></small>
       <div class="d-none name"><code>conditional-cells.Rmd</code></div>
@@ -67,6 +67,9 @@
 
     
     
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shiny.posit.co/" class="external-link">shiny</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/esqlabs/esq.handsontable" class="external-link">esq.handsontable</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -78,60 +81,79 @@ user selections.</p>
 <div class="section level2">
 <h2 id="basic-syntax">Basic Syntax<a class="anchor" aria-label="anchor" href="#basic-syntax"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_conditions</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">example_condition</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    column <span class="op">=</span> <span class="st">"target_column"</span>,       <span class="co"># Column to modify</span></span>
 <span>    when_column <span class="op">=</span> <span class="st">"trigger_column"</span>, <span class="co"># Column to watch</span></span>
 <span>    when_value <span class="op">=</span> <span class="st">"trigger_value"</span>,   <span class="co"># Value that triggers condition</span></span>
 <span>    readOnly <span class="op">=</span> <span class="cn">TRUE</span>                 <span class="co"># Property to set</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">example_condition</span><span class="op">)</span></span>
+<span><span class="co">#&gt; List of 1</span></span>
+<span><span class="co">#&gt;  $ :List of 4</span></span>
+<span><span class="co">#&gt;   ..$ column     : chr "target_column"</span></span>
+<span><span class="co">#&gt;   ..$ when_column: chr "trigger_column"</span></span>
+<span><span class="co">#&gt;   ..$ when_value : chr "trigger_value"</span></span>
+<span><span class="co">#&gt;   ..$ readOnly   : logi TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="simple-example">Simple Example<a class="anchor" aria-label="anchor" href="#simple-example"></a>
 </h2>
 <p>Disable fields based on a data type selection:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/esq_tableInput.html">esq_tableInput</a></span><span class="op">(</span><span class="st">"analysis"</span>,</span>
-<span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Analysis 1"</span>, <span class="st">"Analysis 2"</span><span class="op">)</span>,</span>
-<span>    dataType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simulated"</span>, <span class="st">"Observed"</span><span class="op">)</span>,</span>
-<span>    scenario <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Baseline"</span>, <span class="st">""</span><span class="op">)</span>,</span>
-<span>    dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"Clinical Data"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">analysis_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Analysis 1"</span>, <span class="st">"Analysis 2"</span><span class="op">)</span>,</span>
+<span>  dataType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simulated"</span>, <span class="st">"Observed"</span><span class="op">)</span>,</span>
+<span>  scenario <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Baseline"</span>, <span class="st">""</span><span class="op">)</span>,</span>
+<span>  dataset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"Clinical Data"</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">analysis_columns</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"name"</span>, type <span class="op">=</span> <span class="st">"text"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"dataType"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
+<span>       source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simulated"</span>, <span class="st">"Observed"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"scenario"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
+<span>       source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Baseline"</span>, <span class="st">"Treatment A"</span>, <span class="st">"Treatment B"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"dataset"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
+<span>       source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Clinical Data"</span>, <span class="st">"Lab Data"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">analysis_conditions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="co"># Disable scenario when Observed</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    column <span class="op">=</span> <span class="st">"scenario"</span>,</span>
+<span>    when_column <span class="op">=</span> <span class="st">"dataType"</span>,</span>
+<span>    when_value <span class="op">=</span> <span class="st">"Observed"</span>,</span>
+<span>    readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"name"</span>, type <span class="op">=</span> <span class="st">"text"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"dataType"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
-<span>         source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simulated"</span>, <span class="st">"Observed"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"scenario"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
-<span>         source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Baseline"</span>, <span class="st">"Treatment A"</span>, <span class="st">"Treatment B"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"dataset"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
-<span>         source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Clinical Data"</span>, <span class="st">"Lab Data"</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  cell_conditions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="co"># Disable scenario when Observed</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      column <span class="op">=</span> <span class="st">"scenario"</span>,</span>
-<span>      when_column <span class="op">=</span> <span class="st">"dataType"</span>,</span>
-<span>      when_value <span class="op">=</span> <span class="st">"Observed"</span>,</span>
-<span>      readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    <span class="co"># Disable dataset when Simulated</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      column <span class="op">=</span> <span class="st">"dataset"</span>,</span>
-<span>      when_column <span class="op">=</span> <span class="st">"dataType"</span>,</span>
-<span>      when_value <span class="op">=</span> <span class="st">"Simulated"</span>,</span>
-<span>      readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span></span>
+<span>  <span class="co"># Disable dataset when Simulated</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    column <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span>    when_column <span class="op">=</span> <span class="st">"dataType"</span>,</span>
+<span>    when_value <span class="op">=</span> <span class="st">"Simulated"</span>,</span>
+<span>    readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">analysis_ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/esq_tableInput.html">esq_tableInput</a></span><span class="op">(</span></span>
+<span>  <span class="st">"analysis"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">analysis_data</span>,</span>
+<span>  columns <span class="op">=</span> <span class="va">analysis_columns</span>,</span>
+<span>  cell_conditions <span class="op">=</span> <span class="va">analysis_conditions</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">analysis_ui</span>, <span class="st">"shiny.tag"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="multiple-conditions-on-same-column">Multiple Conditions on Same Column<a class="anchor" aria-label="anchor" href="#multiple-conditions-on-same-column"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_conditions</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">payment_conditions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="co"># Disable amount for Free</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    column <span class="op">=</span> <span class="st">"amount"</span>,</span>
@@ -146,14 +168,17 @@ user selections.</p>
 <span>    when_value <span class="op">=</span> <span class="st">"Trial"</span>,</span>
 <span>    readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">payment_conditions</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cascading-conditions">Cascading Conditions<a class="anchor" aria-label="anchor" href="#cascading-conditions"></a>
 </h2>
 <p>Disable multiple columns based on one trigger:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_conditions</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">shipping_conditions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="co"># If shipping is "Pickup", disable these fields:</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    column <span class="op">=</span> <span class="st">"address"</span>,</span>
@@ -173,39 +198,53 @@ user selections.</p>
 <span>    when_value <span class="op">=</span> <span class="st">"Pickup"</span>,</span>
 <span>    readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">shipping_conditions</span>, <span class="va">`[[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="st">"column"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "address"       "delivery_date" "shipping_cost"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="real-world-example-clinical-trial">Real-World Example: Clinical Trial<a class="anchor" aria-label="anchor" href="#real-world-example-clinical-trial"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/esq_tableInput.html">esq_tableInput</a></span><span class="op">(</span><span class="st">"trial_config"</span>,</span>
-<span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    arm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Treatment A"</span><span class="op">)</span>,</span>
-<span>    arm_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Placebo"</span>, <span class="st">"Active"</span><span class="op">)</span>,</span>
-<span>    drug <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"Drug X"</span><span class="op">)</span>,</span>
-<span>    dose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span>,</span>
-<span>    frequency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"Daily"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"arm"</span>, type <span class="op">=</span> <span class="st">"text"</span>, width <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"arm_type"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
-<span>         source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Placebo"</span>, <span class="st">"Active"</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"drug"</span>, type <span class="op">=</span> <span class="st">"text"</span>, width <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"dose"</span>, type <span class="op">=</span> <span class="st">"numeric"</span>, width <span class="op">=</span> <span class="fl">80</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"frequency"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
-<span>         source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Daily"</span>, <span class="st">"Twice Daily"</span>, <span class="st">"Weekly"</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  cell_conditions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="co"># Placebo arms don't need drug info</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column <span class="op">=</span> <span class="st">"drug"</span>, when_column <span class="op">=</span> <span class="st">"arm_type"</span>,</span>
-<span>         when_value <span class="op">=</span> <span class="st">"Placebo"</span>, readOnly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column <span class="op">=</span> <span class="st">"dose"</span>, when_column <span class="op">=</span> <span class="st">"arm_type"</span>,</span>
-<span>         when_value <span class="op">=</span> <span class="st">"Placebo"</span>, readOnly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column <span class="op">=</span> <span class="st">"frequency"</span>, when_column <span class="op">=</span> <span class="st">"arm_type"</span>,</span>
-<span>         when_value <span class="op">=</span> <span class="st">"Placebo"</span>, readOnly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">trial_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  arm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Control"</span>, <span class="st">"Treatment A"</span><span class="op">)</span>,</span>
+<span>  arm_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Placebo"</span>, <span class="st">"Active"</span><span class="op">)</span>,</span>
+<span>  drug <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"Drug X"</span><span class="op">)</span>,</span>
+<span>  dose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span>,</span>
+<span>  frequency <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">""</span>, <span class="st">"Daily"</span><span class="op">)</span>,</span>
+<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">trial_columns</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"arm"</span>, type <span class="op">=</span> <span class="st">"text"</span>, width <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"arm_type"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
+<span>       source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Placebo"</span>, <span class="st">"Active"</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"drug"</span>, type <span class="op">=</span> <span class="st">"text"</span>, width <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"dose"</span>, type <span class="op">=</span> <span class="st">"numeric"</span>, width <span class="op">=</span> <span class="fl">80</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"frequency"</span>, type <span class="op">=</span> <span class="st">"dropdown"</span>,</span>
+<span>       source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Daily"</span>, <span class="st">"Twice Daily"</span>, <span class="st">"Weekly"</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">trial_conditions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="co"># Placebo arms don't need drug info</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column <span class="op">=</span> <span class="st">"drug"</span>, when_column <span class="op">=</span> <span class="st">"arm_type"</span>,</span>
+<span>       when_value <span class="op">=</span> <span class="st">"Placebo"</span>, readOnly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column <span class="op">=</span> <span class="st">"dose"</span>, when_column <span class="op">=</span> <span class="st">"arm_type"</span>,</span>
+<span>       when_value <span class="op">=</span> <span class="st">"Placebo"</span>, readOnly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>column <span class="op">=</span> <span class="st">"frequency"</span>, when_column <span class="op">=</span> <span class="st">"arm_type"</span>,</span>
+<span>       when_value <span class="op">=</span> <span class="st">"Placebo"</span>, readOnly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">trial_ui</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/esq_tableInput.html">esq_tableInput</a></span><span class="op">(</span></span>
+<span>  <span class="st">"trial_config"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">trial_data</span>,</span>
+<span>  columns <span class="op">=</span> <span class="va">trial_columns</span>,</span>
+<span>  cell_conditions <span class="op">=</span> <span class="va">trial_conditions</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">trial_ui</span>, <span class="st">"shiny.tag"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
@@ -236,8 +275,8 @@ be?</li>
 <strong>Document your logic</strong> - Add comments explaining
 rules</li>
 </ol>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cell_conditions</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">documented_conditions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="co"># Business rule: Observed data uses datasets, not scenarios</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    column <span class="op">=</span> <span class="st">"scenario"</span>,</span>
@@ -245,7 +284,10 @@ rules</li>
 <span>    when_value <span class="op">=</span> <span class="st">"Observed"</span>,</span>
 <span>    readOnly <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">documented_conditions</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">column</span></span>
+<span><span class="co">#&gt; [1] "scenario"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>

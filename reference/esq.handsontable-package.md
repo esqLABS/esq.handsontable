@@ -1,6 +1,6 @@
-# esq.handsontable: Interactive Data Tables with 'Handsontable' for 'Shiny'
+# esq.handsontable: Interactive Data Tables with 'Handsontable' for 'shiny'
 
-Provides an interactive, Excel-like data table input for 'Shiny'
+Provides an interactive, Excel-like data table input for 'shiny'
 applications. Wraps 'Handsontable' <https://handsontable.com/> and
 'React' to offer editable tables with dropdown columns, multi-select
 with sorting, validation, conditional cell disabling, context menu, and

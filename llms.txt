@@ -1,6 +1,6 @@
 # esq.handsontable
 
-A powerful, reusable Handsontable wrapper for R Shiny applications. This
+A powerful, reusable Handsontable wrapper for R shiny applications. This
 package provides interactive data tables with dropdowns, multi-select,
 validation, conditional cell disabling, and more.
 
