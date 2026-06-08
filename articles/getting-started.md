@@ -13,6 +13,7 @@ and more.
 ## Installation
 
 ``` r
+
 # Install from GitHub
 devtools::install_github("esqlabs/esq.handsontable")
 ```
@@ -22,6 +23,7 @@ devtools::install_github("esqlabs/esq.handsontable")
 Build a small data set and a matching column configuration:
 
 ``` r
+
 library(shiny)
 library(esq.handsontable)
 
@@ -50,6 +52,7 @@ returns a shiny UI element. You can construct it outside of an app to
 inspect the structure:
 
 ``` r
+
 table_ui <- esq_tableInput(
   "my_table",
   data = people,
@@ -65,6 +68,7 @@ Wrap it in a shiny app to use it interactively. The
 starts when the vignette is run interactively:
 
 ``` r
+
 ui <- fluidPage(table_ui)
 
 server <- function(input, output, session) {
@@ -83,30 +87,30 @@ if (interactive()) {
 
 ### The `esq_tableInput()` Function
 
-| Argument              | Description                                            |
-|-----------------------|--------------------------------------------------------|
-| `inputId`             | Unique identifier for the table                        |
-| `data`                | A data frame with initial data                         |
-| `columns`             | List of column configurations                          |
-| `options`             | Named list of dropdown options for dynamic updates     |
-| `column_descriptions` | Optional tooltips for columns                          |
-| `show_action_buttons` | Show add/delete row buttons (default: TRUE)            |
-| `context_menu`        | Enable right-click context menu (default: TRUE)        |
-| `none_value`          | *Deprecated, ignored.* Kept for backward compatibility |
-| `height`              | Table height (default: “100%”)                         |
-| `width`               | Table width (default: “100%”)                          |
-| `cell_conditions`     | Optional conditional cell rules                        |
+| Argument | Description |
+|----|----|
+| `inputId` | Unique identifier for the table |
+| `data` | A data frame with initial data |
+| `columns` | List of column configurations |
+| `options` | Named list of dropdown options for dynamic updates |
+| `column_descriptions` | Optional tooltips for columns |
+| `show_action_buttons` | Show add/delete row buttons (default: TRUE) |
+| `context_menu` | Enable right-click context menu (default: TRUE) |
+| `none_value` | *Deprecated, ignored.* Kept for backward compatibility |
+| `height` | Table height (default: “100%”) |
+| `width` | Table width (default: “100%”) |
+| `cell_conditions` | Optional conditional cell rules |
 
 ### Column Types
 
-| Type          | Description                                                                                                                  |
-|---------------|------------------------------------------------------------------------------------------------------------------------------|
-| `text`        | Standard text input                                                                                                          |
-| `numeric`     | Number input with validation                                                                                                 |
-| `checkbox`    | Boolean checkbox                                                                                                             |
-| `dropdown`    | Single-select dropdown                                                                                                       |
-| `multiselect` | Multi-select dropdown                                                                                                        |
-| `date`        | Calendar picker (Pikaday). Configure with `dateFormat` (default `"YYYY-MM-DD"`), optional `correctFormat`, and `defaultDate` |
+| Type | Description |
+|----|----|
+| `text` | Standard text input |
+| `numeric` | Number input with validation |
+| `checkbox` | Boolean checkbox |
+| `dropdown` | Single-select dropdown |
+| `multiselect` | Multi-select dropdown |
+| `date` | Calendar picker (Pikaday). Configure with `dateFormat` (default `"YYYY-MM-DD"`), optional `correctFormat`, and `defaultDate` |
 
 ### Context Menu
 
@@ -121,6 +125,7 @@ undo/redo, copy, clear selection, and clear column.
   to insert a separator.
 
 ``` r
+
 custom_menu_ui <- esq_tableInput(
   "my_table",
   data = people,
@@ -140,6 +145,7 @@ Valid item names: `row_above`, `row_below`, `remove_row`, `undo`,
 In a shiny server, parse the JSON sent on each edit:
 
 ``` r
+
 observeEvent(input$my_table_edited, {
   data <- jsonlite::fromJSON(input$my_table_edited)
   # Use the data...

@@ -1,6 +1,7 @@
 # Column Types and Configuration
 
 ``` r
+
 library(shiny)
 library(esq.handsontable)
 ```
@@ -24,6 +25,7 @@ Each column is configured as a list with various options:
 Standard text input fields:
 
 ``` r
+
 description_col <- list(name = "description", type = "text", width = 200)
 
 # Read-only text
@@ -41,6 +43,7 @@ str(description_col)
 Number input with automatic validation:
 
 ``` r
+
 quantity_col <- list(name = "quantity", type = "numeric", width = 100)
 price_col <- list(name = "price", type = "numeric", width = 80)
 
@@ -56,6 +59,7 @@ str(price_col)
 Boolean checkbox cells. Data should contain `TRUE`/`FALSE` values.
 
 ``` r
+
 active_col <- list(name = "active", type = "checkbox", width = 70)
 str(active_col)
 #> List of 3
@@ -69,6 +73,7 @@ str(active_col)
 Single-select dropdown menus:
 
 ``` r
+
 category_col <- list(
   name = "category",
   type = "dropdown",
@@ -102,6 +107,7 @@ Select multiple values from a list. Multi-select values are stored as
 comma-separated strings (e.g., `"tag1, tag2, tag3"`).
 
 ``` r
+
 # Basic multi-select
 tags_col <- list(
   name = "tags",
@@ -128,6 +134,7 @@ priorities_col$sortable
 Add helpful tooltips to column headers:
 
 ``` r
+
 my_data <- data.frame(
   id = c("A1", "A2"),
   name = c("First", "Second"),
@@ -163,6 +170,7 @@ inherits(tooltip_ui, "shiny.tag")
 ## Complete Example
 
 ``` r
+
 inventory <- data.frame(
   sku = c("SKU-001", "SKU-002"),
   name = c("Widget", "Gadget"),
@@ -208,6 +216,7 @@ inventory
 Wrap it in a shiny app to view interactively:
 
 ``` r
+
 ui <- fluidPage(inventory_ui)
 
 server <- function(input, output, session) {

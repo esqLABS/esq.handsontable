@@ -1,6 +1,7 @@
 # Conditional Cell Properties
 
 ``` r
+
 library(shiny)
 library(esq.handsontable)
 ```
@@ -14,6 +15,7 @@ where fields become relevant or irrelevant based on user selections.
 ## Basic Syntax
 
 ``` r
+
 example_condition <- list(
   list(
     column = "target_column",       # Column to modify
@@ -37,6 +39,7 @@ str(example_condition)
 Disable fields based on a data type selection:
 
 ``` r
+
 analysis_data <- data.frame(
   name = c("Analysis 1", "Analysis 2"),
   dataType = c("Simulated", "Observed"),
@@ -86,6 +89,7 @@ inherits(analysis_ui, "shiny.tag")
 ## Multiple Conditions on Same Column
 
 ``` r
+
 payment_conditions <- list(
   # Disable amount for Free
   list(
@@ -112,6 +116,7 @@ length(payment_conditions)
 Disable multiple columns based on one trigger:
 
 ``` r
+
 shipping_conditions <- list(
   # If shipping is "Pickup", disable these fields:
   list(
@@ -141,6 +146,7 @@ vapply(shipping_conditions, `[[`, character(1), "column")
 ## Real-World Example: Clinical Trial
 
 ``` r
+
 trial_data <- data.frame(
   arm = c("Control", "Treatment A"),
   arm_type = c("Placebo", "Active"),
@@ -198,6 +204,7 @@ inherits(trial_ui, "shiny.tag")
 4.  **Document your logic** - Add comments explaining rules
 
 ``` r
+
 documented_conditions <- list(
   # Business rule: Observed data uses datasets, not scenarios
   list(

@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Interactive Data Tables with Handsontable for shiny • esq.handsontable</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Interactive Data Tables with Handsontable for shiny">
 <meta name="description" content="Provides an interactive, Excel-like data table input for shiny applications. Wraps Handsontable &lt;https://handsontable.com/&gt; and React to offer editable tables with dropdown columns, multi-select with sorting, validation, conditional cell disabling, context menu, and dynamic option updates at runtime.">
@@ -141,58 +141,58 @@
 <col width="22%">
 <col width="48%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Option</th>
 <th>Type</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>name</code></td>
 <td>string</td>
 <td>Column name (required)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>type</code></td>
 <td>string</td>
 <td>Column type: “text”, “numeric”, “checkbox”, “dropdown”, “multiselect”, “date”</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>source</code></td>
 <td>vector</td>
 <td>Options for dropdown/multiselect columns</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>sortable</code></td>
 <td>boolean</td>
 <td>Enable drag-and-drop sorting for multiselect (default: FALSE)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>validate</code></td>
 <td>boolean</td>
 <td>Validate dropdown values (default: TRUE)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>readOnly</code></td>
 <td>boolean</td>
 <td>Make column read-only (default: FALSE)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>width</code></td>
 <td>number</td>
 <td>Column width in pixels</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>dateFormat</code></td>
 <td>string</td>
 <td>Moment.js format for date columns (default: <code>"YYYY-MM-DD"</code>)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>correctFormat</code></td>
 <td>boolean</td>
 <td>Auto-correct typed dates to <code>dateFormat</code> (default: TRUE)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>defaultDate</code></td>
 <td>string</td>
 <td>Date shown when the calendar opens on an empty cell</td>

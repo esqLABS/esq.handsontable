@@ -1,6 +1,7 @@
 # Advanced Usage
 
 ``` r
+
 library(shiny)
 library(esq.handsontable)
 ```
@@ -18,6 +19,7 @@ logic an
 would call:
 
 ``` r
+
 classify_row_change <- function(old_count, new_count) {
   if (new_count > old_count) "added"
   else if (new_count < old_count) "removed"
@@ -33,6 +35,7 @@ classify_row_change(5, 5)
 ```
 
 ``` r
+
 server <- function(input, output, session) {
   row_count <- reactiveVal(5)
 
@@ -53,6 +56,7 @@ call from a shiny
 [`observeEvent()`](https://rdrr.io/pkg/shiny/man/observeEvent.html):
 
 ``` r
+
 validate_data <- function(data) {
   errors <- character()
 
@@ -87,6 +91,7 @@ validate_data(dirty)
 ```
 
 ``` r
+
 server <- function(input, output, session) {
   observeEvent(input$my_table_edited, {
     data <- jsonlite::fromJSON(input$my_table_edited)
@@ -107,6 +112,7 @@ server <- function(input, output, session) {
 A small dataset to demonstrate CSV / JSON export:
 
 ``` r
+
 table_data <- data.frame(
   product = c("Widget", "Gadget"),
   price = c(29.99, 49.99),
@@ -129,6 +135,7 @@ The same logic plugged into a
 [`downloadHandler()`](https://rdrr.io/pkg/shiny/man/downloadHandler.html):
 
 ``` r
+
 ui <- fluidPage(
   esq_tableInput("data_table", data = table_data,
                  columns = list(list(name = "product", type = "text"),
@@ -158,6 +165,7 @@ server <- function(input, output, session) {
 ## Auto-Save Pattern
 
 ``` r
+
 server <- function(input, output, session) {
   auto_save <- debounce(reactive(input$my_table_edited), 2000)
 
@@ -176,6 +184,7 @@ server <- function(input, output, session) {
 ## Integration with plotly
 
 ``` r
+
 library(plotly)
 
 ui <- fluidPage(
@@ -206,6 +215,7 @@ Build the styling chunk with `htmltools` so it can be inspected before
 being dropped into a shiny `tags$head()`:
 
 ``` r
+
 custom_css <- htmltools::tags$style(htmltools::HTML("
   .esq-handsontable th {
     background: #f5f5f5;
@@ -225,6 +235,7 @@ inherits(custom_css, "shiny.tag")
 ```
 
 ``` r
+
 ui <- fluidPage(
   tags$head(custom_css),
   esq_tableInput("styled_table", data = my_data, columns = my_columns)
@@ -253,6 +264,7 @@ Built-in Handsontable shortcuts:
 A safe parser that returns `NULL` on bad JSON:
 
 ``` r
+
 safe_parse <- function(json) {
   tryCatch(
     jsonlite::fromJSON(json),
@@ -268,6 +280,7 @@ safe_parse("not valid json")
 ```
 
 ``` r
+
 observeEvent(input$my_table_edited, {
   data <- safe_parse(input$my_table_edited)
   if (is.null(data)) {

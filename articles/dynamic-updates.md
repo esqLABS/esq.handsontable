@@ -1,6 +1,7 @@
 # Dynamic Updates
 
 ``` r
+
 library(shiny)
 library(esq.handsontable)
 ```
@@ -17,6 +18,7 @@ The function signature, with all arguments optional except `session` and
 `inputId`:
 
 ``` r
+
 args(updateEsqTable)
 #> function (session, inputId, data = NULL, options = NULL, columns = NULL) 
 #> NULL
@@ -34,6 +36,7 @@ Pass only what you need to change:
 Build a sales table whose `country` dropdown can be swapped per region:
 
 ``` r
+
 sales_data <- data.frame(
   product = c("Widget", "Gadget"),
   country = c("USA", "Canada"),
@@ -59,6 +62,7 @@ region_choices[["Europe"]]
 Hook it up in a shiny app:
 
 ``` r
+
 ui <- fluidPage(
   selectInput("region", "Region:", choices = names(region_choices)),
   actionButton("update", "Update Countries"),
@@ -83,6 +87,7 @@ if (interactive()) {
 Pass a new data frame to swap out all rows:
 
 ``` r
+
 observeEvent(input$reset, {
   updateEsqTable(session, "sales", data = original_data)
 })
@@ -99,6 +104,7 @@ observeEvent(input$region, {
 A single call can update several option vectors at once:
 
 ``` r
+
 batched_options <- list(
   country = c("USA", "Canada"),
   state   = c("California", "Texas"),
@@ -110,12 +116,14 @@ names(batched_options)
 ```
 
 ``` r
+
 updateEsqTable(session, "my_table", options = batched_options)
 ```
 
 ## Reactive Updates
 
 ``` r
+
 server <- function(input, output, session) {
   available_options <- reactive({
     # Could be a database query
@@ -139,6 +147,7 @@ server <- function(input, output, session) {
 A lookup table maps each country to its list of states:
 
 ``` r
+
 location_data <- list(
   "USA"    = c("California", "Texas", "New York"),
   "Canada" = c("Ontario", "Quebec", "BC")
@@ -149,6 +158,7 @@ location_data[["USA"]]
 ```
 
 ``` r
+
 server <- function(input, output, session) {
   observeEvent(input$country, {
     updateEsqTable(session, "location_table",
@@ -161,6 +171,7 @@ server <- function(input, output, session) {
 ## Database-Driven Updates
 
 ``` r
+
 server <- function(input, output, session) {
   observeEvent(input$refresh, {
     # Query from database
@@ -183,6 +194,7 @@ server <- function(input, output, session) {
 When using modules, the session is automatically namespaced:
 
 ``` r
+
 tableModuleServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     observeEvent(input$refresh, {
@@ -203,6 +215,7 @@ Option updates merge cumulatively on the client, so either form works. A
 single call avoids redundant round-trips and is preferred.
 
 ``` r
+
 # Preferred: single call
 updateEsqTable(session, "table",
   options = list(
@@ -220,6 +233,7 @@ updateEsqTable(session, "table", options = list(col2 = opts2))
 ### Debouncing
 
 ``` r
+
 server <- function(input, output, session) {
   search_debounced <- debounce(reactive(input$search), 300)
 

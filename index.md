@@ -23,6 +23,7 @@ validation, conditional cell disabling, and more.
 ## Installation
 
 ``` r
+
 # Install from GitHub using pak (recommended)
 pak::pak("esqLABS/esq.handsontable")
 
@@ -33,6 +34,7 @@ remotes::install_github("esqLABS/esq.handsontable")
 ## Quick Start
 
 ``` r
+
 library(shiny)
 library(esq.handsontable)
 
@@ -65,22 +67,23 @@ shinyApp(ui, server)
 
 Each column is configured as a list with the following options:
 
-| Option          | Type    | Description                                                                   |
-|-----------------|---------|-------------------------------------------------------------------------------|
-| `name`          | string  | Column name (required)                                                        |
-| `type`          | string  | Column type: “text”, “numeric”, “checkbox”, “dropdown”, “multiselect”, “date” |
-| `source`        | vector  | Options for dropdown/multiselect columns                                      |
-| `sortable`      | boolean | Enable drag-and-drop sorting for multiselect (default: FALSE)                 |
-| `validate`      | boolean | Validate dropdown values (default: TRUE)                                      |
-| `readOnly`      | boolean | Make column read-only (default: FALSE)                                        |
-| `width`         | number  | Column width in pixels                                                        |
-| `dateFormat`    | string  | Moment.js format for date columns (default: `"YYYY-MM-DD"`)                   |
-| `correctFormat` | boolean | Auto-correct typed dates to `dateFormat` (default: TRUE)                      |
-| `defaultDate`   | string  | Date shown when the calendar opens on an empty cell                           |
+| Option | Type | Description |
+|----|----|----|
+| `name` | string | Column name (required) |
+| `type` | string | Column type: “text”, “numeric”, “checkbox”, “dropdown”, “multiselect”, “date” |
+| `source` | vector | Options for dropdown/multiselect columns |
+| `sortable` | boolean | Enable drag-and-drop sorting for multiselect (default: FALSE) |
+| `validate` | boolean | Validate dropdown values (default: TRUE) |
+| `readOnly` | boolean | Make column read-only (default: FALSE) |
+| `width` | number | Column width in pixels |
+| `dateFormat` | string | Moment.js format for date columns (default: `"YYYY-MM-DD"`) |
+| `correctFormat` | boolean | Auto-correct typed dates to `dateFormat` (default: TRUE) |
+| `defaultDate` | string | Date shown when the calendar opens on an empty cell |
 
 ### Example: Multi-select with Sorting
 
 ``` r
+
 list(
   name = "tags",
   type = "multiselect",
@@ -95,6 +98,7 @@ Use `cell_conditions` to dynamically change cell properties based on
 other cells:
 
 ``` r
+
 esq_tableInput("myTable",
   data = myData,
   columns = list(
@@ -126,6 +130,7 @@ esq_tableInput("myTable",
 Add helpful tooltips to column headers:
 
 ``` r
+
 esq_tableInput("myTable",
   data = myData,
   columns = columns,
@@ -142,6 +147,7 @@ esq_tableInput("myTable",
 Use `updateEsqTable` to update dropdown options at runtime:
 
 ``` r
+
 server <- function(input, output, session) {
   observeEvent(input$refreshCategories, {
     updateEsqTable(session, "myTable",
