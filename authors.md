@@ -4,6 +4,17 @@
 
 - **Anastasia Kostiv**. Author, maintainer.
 
+- **esqLABS GmbH**. Copyright holder, funder.
+
+- **Handsoncode sp. z o.o.**. Copyright holder.  
+  Bundled Handsontable and HyperFormula libraries
+
+- **Meta Platforms, Inc.**. Copyright holder.  
+  Bundled React
+
+- **MUI contributors**. Copyright holder.  
+  Bundled MUI
+
 ## Citation
 
 Source:
