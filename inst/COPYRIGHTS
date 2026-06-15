@@ -1,0 +1,26 @@
+The esq.handsontable R package is released under the MIT license
+(see LICENSE / LICENSE.md), Copyright (c) 2024 esqLABS GmbH.
+
+The compiled JavaScript bundle shipped in
+inst/www/esq.handsontable/main_bundle/bundle.js includes third-party
+software, each governed by its own license:
+
+- Handsontable 14.6.2
+  Copyright (c) Handsoncode sp. z o.o.
+  Proprietary license; used here under the free
+  "non-commercial-and-evaluation" license key.
+  Commercial use requires a separate license from Handsoncode.
+  https://handsontable.com
+
+- HyperFormula 2.7.1
+  Copyright (c) Handsoncode sp. z o.o.
+  Dual-licensed: GPL-3.0-only or a commercial license.
+  https://hyperformula.handsontable.com
+
+- React, React-DOM 18.3.1  - MIT - Copyright (c) Meta Platforms, Inc.
+- MUI (@mui/*) 5.18.0       - MIT - Copyright (c) MUI contributors
+- Emotion (@emotion/*) 11   - MIT - Copyright (c) Emotion contributors
+- Moment.js 2.30.1          - MIT - Copyright (c) JS Foundation and contributors
+- DOMPurify 2.5.9           - Apache-2.0 / MPL-2.0 - Copyright (c) Cure53
+- numbro 2.1.2              - MIT - Copyright (c) Benjamin Van Ryseghem
+- Pikaday 1.8.2             - BSD/MIT - Copyright (c) David Bushell

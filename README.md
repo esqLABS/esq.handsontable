@@ -157,7 +157,24 @@ server <- function(input, output, session) {
 
 ## License
 
-MIT License
+The `esq.handsontable` R package (its R and original JavaScript source) is
+released under the MIT License, Copyright (c) 2024 esqLABS GmbH.
+
+### Third-party licenses
+
+The compiled JavaScript bundle shipped with this package
+(`inst/www/esq.handsontable/main_bundle/bundle.js`) embeds third-party
+libraries, each governed by its own license. A full list is in
+[`inst/COPYRIGHTS`](inst/COPYRIGHTS). Note in particular:
+
+- **Handsontable** is a proprietary library by Handsoncode sp. z o.o. It is
+  used here under the free `non-commercial-and-evaluation` license key.
+  **Commercial use requires a separate license from Handsoncode.**
+- **HyperFormula** (Handsoncode sp. z o.o.) is dual-licensed under
+  GPL-3.0-only or a commercial license.
+
+The MIT license above covers only this package's own code, not the bundled
+third-party software.
 
 ## Credits
 
